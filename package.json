@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "mocha -r ts-node/register src/**/*.test.ts",
-    "coverage": "tsc && nyc mocha build/**/*.test.js",
+    "test": "mocha -r ts-node/register test/**/*.test.ts",
+    "coverage": "nyc npm run test",
     "build": "tsc"
   },
   "keywords": [],

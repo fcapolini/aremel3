@@ -1,5 +1,5 @@
 {
-	"include": ["src/**/*"], // don't include ./test/ dir
+	"include": ["src/**/*.ts"],
 	"ts-node": {
 		"transpileOnly": true,
 		"transpiler": "ts-node/transpilers/swc-experimental"
