@@ -29,8 +29,3 @@ jobs:
     - run: npm ci
     - run: npm run build --if-present
     - run: npm test
-    - name: Create test summary
-      uses: test-summary/action@dist
-      with:
-        paths: results/**/*.xml
-      if: always()
