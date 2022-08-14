@@ -1,3 +1,6 @@
 node_modules
 app/bin/**
 build
+
+.nyc_output
+coverage
