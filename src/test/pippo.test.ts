@@ -1,6 +1,6 @@
 import { assert } from "chai";
 
-describe('dummy', function () {
+describe('pippo', function () {
 
 	it("should succeed", () => {
 		assert.isTrue(true);

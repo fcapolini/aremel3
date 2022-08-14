@@ -1,19 +1,18 @@
 {
-  "cache": true,
+  "cache": false,
   "check-coverage": false,
   "extension": [
-    ".ts"
+    ".js"
   ],
   "include": [
-    "**/*.ts"
+    "build/**"
   ],
   "exclude": [
     "app/**",
-    "build/**",
     "coverage/**",
     "node_modules/**",
-    "test/**",
-    "**/*.d.ts"
+    "**/*.d.ts",
+    "build/**/*.test.js"
   ],
   "sourceMap": true,
   "reporter": [
