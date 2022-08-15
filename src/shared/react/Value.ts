@@ -1,7 +1,11 @@
 import Scope from "./Scope";
 
-export interface ValueProps {
+export declare type ValueFn = (obj: any) => any;
 
+export interface ValueProps {
+	name?: string;
+	fn?: ValueFn;
+	refs?: string[];
 }
 
 export default class Value {

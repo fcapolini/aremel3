@@ -1,4 +1,9 @@
-import Value from "./Value";
+import Value, { ValueProps } from "./Value";
+
+const ANON_VALUE_PREFIX = 'v-';
+
+export declare type ScopeObj = any;
+export declare type ScopeProxy = any;
 
 export interface ScopeProps {
 
@@ -11,7 +16,9 @@ export default class Scope {
 	props: ScopeProps;
 	cb?: (p: Scope) => void;
 	cycle: number;
-	values: Set<Value>;
+	values: Map<string, Value>;
+	obj: ScopeObj;
+	proxy: ScopeProxy;
 
 	constructor(parent: Scope | null, props: ScopeProps, cb?: (p: Scope) => void) {
 		this.root = parent ? parent.root : this;
@@ -20,7 +27,18 @@ export default class Scope {
 		this.props = props;
 		this.cb = cb;
 		this.cycle = 0;
-		this.values = new Set();
+		this.values = new Map();
+		this.obj = {};
+		this.proxy = new Proxy(this.obj, {
+			
+		});
+	}
+
+	addValue(props: ValueProps): Value {
+		const value = new Value(this, props);
+		const name = props.name ?? `${ANON_VALUE_PREFIX}-${this.values.size}`;
+		this.values.set(name, value);
+		return value;
 	}
 
 }
