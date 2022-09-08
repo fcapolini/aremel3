@@ -1,7 +1,7 @@
 import { promises as fsPromises } from "fs"; // node >= 10.1
 // import fsPromises from "fs/promises"; // node >= 14
 import path from "path";
-import { ELEMENT_NODE, TEXT_NODE } from "../../shared/dom";
+import { ELEMENT_NODE, TEXT_NODE } from "../shared/dom";
 import { HtmlDocument, HtmlElement, HtmlNode, HtmlPos, HtmlText } from "./htmldom";
 import HtmlParser, { HtmlException } from "./htmlparser";
 

@@ -31,7 +31,7 @@ export function makeHyphenName(n: string): string {
 }
 
 export function normalizeText(s?: string): string {
-  if (s) {
+  if (s != null) {
     // @ts-ignore
     return new EReg('([\\s]+)', 'gm').map(s, (ereg) => {
       return ereg.matched(1).indexOf('\n') >= 0 ? '\n' : ' ';
@@ -42,7 +42,7 @@ export function normalizeText(s?: string): string {
 }
 
 export function normalizeSpace(s?: string): string {
-  if (s) {
+  if (s != null) {
     // @ts-ignore
     return new EReg('([\\s]+)', 'gm').map(s, (ereg) => {
       return ' ';

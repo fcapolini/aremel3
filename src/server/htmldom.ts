@@ -1,5 +1,5 @@
-import { COMMENT_NODE, DomComment, DomDocument, DomElement, DomNode, DomNodeList, DomTextNode, ELEMENT_NODE, TEXT_NODE } from "../../shared/dom";
-import { StringBuf } from "../../shared/util";
+import { COMMENT_NODE, DomComment, DomDocument, DomElement, DomNode, DomNodeList, DomTextNode, ELEMENT_NODE, TEXT_NODE } from "../shared/dom";
+import { StringBuf } from "../shared/util";
 import HtmlParser from "./htmlparser";
 
 export interface HtmlPos {

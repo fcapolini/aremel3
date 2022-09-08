@@ -1,15 +1,15 @@
-import { HtmlDocument, HtmlElement } from "../../../src/server/html/htmldom";
-import { ELEMENT_NODE, TEXT_NODE } from "../../../src/shared/dom";
-import Preprocessor, { domGetTop, PreprocessorError } from "../../../src/server/html/preprocessor";
-import { EReg, normalizeText } from "../../../src/shared/util";
+import { HtmlDocument, HtmlElement } from "../../src/server/htmldom";
+import { ELEMENT_NODE, TEXT_NODE } from "../../src/shared/dom";
+import Preprocessor, { domGetTop, PreprocessorError } from "../../src/server/preprocessor";
+import { EReg, normalizeText } from "../../src/shared/util";
 import { assert } from "chai";
 
-const preprocessor = new Preprocessor(process.cwd() + '/test/server/html/preprocessor');
+const preprocessor = new Preprocessor(process.cwd() + '/test/server/preprocessor');
 
 describe("preprocessor", () => {
 
   it("should complain about missing file", async () => {
-    var msg = '';
+    let msg = '';
     try {
       await preprocessor.reset().read('inexistent.html');
     } catch (ex:any) {
@@ -19,7 +19,7 @@ describe("preprocessor", () => {
   });
 
   it("should read the single test001.html UFT-8 file", async () => {
-    var doc = await preprocessor.reset().read('test001.html');
+    const doc = await preprocessor.reset().read('test001.html');
     assert.exists(doc);
     assert.isFalse(adjacentTextNodes(doc));
     assert.equal(doc?.toString(), '<html utf8-value="€"><head></head><body></body></html>');
@@ -30,21 +30,21 @@ describe("preprocessor", () => {
   // =========================================================================
 
   it("should follow test002.html inclusion chain", async () => {
-    var doc = await preprocessor.reset().read('test002.html');
+    const doc = await preprocessor.reset().read('test002.html');
     assert.exists(doc);
     assert.isFalse(adjacentTextNodes(doc));
     assert.equal(doc?.toString(), '<html><head></head><body><div>Test 2</div></body></html>');
   });
 
   it("should include test002includes.html inclusions twice", async () => {
-    var doc = await preprocessor.reset().read('test002includes.html');
+    const doc = await preprocessor.reset().read('test002includes.html');
     assert.exists(doc);
     assert.isFalse(adjacentTextNodes(doc));
     assert.equal(doc?.toString(), '<html><head></head><body><div>Test 2</div><div>Test 2</div></body></html>');
   });
 
   it("should import test002imports.html inclusions once", async () => {
-    var doc = await preprocessor.reset().read('test002imports.html');
+    const doc = await preprocessor.reset().read('test002imports.html');
     assert.exists(doc);
     assert.isFalse(adjacentTextNodes(doc));
     assert.equal(doc?.toString(), '<html><head></head><body><div>Test 2</div></body></html>');
@@ -53,7 +53,7 @@ describe("preprocessor", () => {
   it("should forbid access to files outside root path", async () => {
     var msg = '';
     try {
-      var doc = await preprocessor.reset().read('test003.html');
+      const doc = await preprocessor.reset().read('test003.html');
     } catch (ex:any) {
       msg = `${ex}`;
     }
@@ -63,7 +63,7 @@ describe("preprocessor", () => {
   it("should complain of missing src in includes", async () => {
     var msg = '';
     try {
-      var doc = await preprocessor.reset().read('test004.html');
+      const doc = await preprocessor.reset().read('test004.html');
     } catch (ex:any) {
       msg = `${ex}`;
     }
@@ -71,12 +71,12 @@ describe("preprocessor", () => {
   });
 
   it("should remove adjacent text nodes", async () => {
-    var doc = await preprocessor.reset().read('test005.html');
+    const doc = await preprocessor.reset().read('test005.html');
     assert.isFalse(adjacentTextNodes(doc));
   });
 
   it("should pass include root attributes to target element", async () => {
-    var doc = await preprocessor.reset().read('testIncludedRootAttributesShouldPassToTargetElement.html');
+    const doc = await preprocessor.reset().read('testIncludedRootAttributesShouldPassToTargetElement.html');
     assert.isFalse(adjacentTextNodes(doc));
     var head = doc ? domGetTop(doc, 'HEAD') : undefined;
     assert.equal(head?.getAttribute(':overriddenAttribute'), '1');
@@ -86,7 +86,7 @@ describe("preprocessor", () => {
   });
 
   it("should accept textual includes", async () => {
-    var doc = await preprocessor.reset().read('testTextualInclude.html');
+    const doc = await preprocessor.reset().read('testTextualInclude.html');
     assert.isFalse(adjacentTextNodes(doc));
     assert.equal(doc?.toString(), '<html><head></head><body>This is a &quot;text&quot;</body></html>');
   });
@@ -96,31 +96,31 @@ describe("preprocessor", () => {
   // =========================================================================
 
   it("should expand an empty macro", async () => {
-    var doc = await preprocessor.reset().read('test101.html');
+    const doc = await preprocessor.reset().read('test101.html');
     assert.isFalse(adjacentTextNodes(doc));
     assert.equal(doc?.toString(), '<html><head></head><body><div></div></body></html>');
   });
 
   it("should expand a macro with text", async () => {
-    var doc = await preprocessor.reset().read('test102.html');
+    const doc = await preprocessor.reset().read('test102.html');
     assert.isFalse(adjacentTextNodes(doc));
     assert.equal(doc?.toString(), '<html><head></head><body><span>[[text]]</span></body></html>');
   });
 
   it("should follow macro inheritance", async () => {
-    var doc = await preprocessor.reset().read('test103.html');
+    const doc = await preprocessor.reset().read('test103.html');
     assert.isFalse(adjacentTextNodes(doc));
     assert.equal(doc?.toString(), '<html><head></head><body><span><b>[[text]]</b></span></body></html>');
   });
 
   it("should add attributes and content to expanded macros", async () => {
-    var doc = await preprocessor.reset().read('test104.html');
+    const doc = await preprocessor.reset().read('test104.html');
     assert.isFalse(adjacentTextNodes(doc));
     assert.equal(doc?.toString(), '<html><head></head><body><span class="title"><b>[[text]]</b>OK</span></body></html>');
   });
 
   it("should keep non-overridden macro attributes", async () => {
-    var doc = await preprocessor.reset().read('test201.html');
+    const doc = await preprocessor.reset().read('test201.html');
     assert.isFalse(adjacentTextNodes(doc));
     assert.equal(normalizeText(doc?.toString()), normalizeText('<html>\n'
       + '<head></head><body>\n'
@@ -130,7 +130,7 @@ describe("preprocessor", () => {
   });
 
   it("should replace overridden macro attributes", async () => {
-    var doc = await preprocessor.reset().read('test202.html');
+    const doc = await preprocessor.reset().read('test202.html');
     assert.isFalse(adjacentTextNodes(doc));
     assert.equal(normalizeText(doc?.toString()), normalizeText('<html>\n'
       + '<head></head><body>\n'
@@ -140,7 +140,7 @@ describe("preprocessor", () => {
   });
 
   it("should let macro define their `default` slot", async () => {
-    var doc = await preprocessor.reset().read('test203.html');
+    const doc = await preprocessor.reset().read('test203.html');
     assert.isFalse(adjacentTextNodes(doc));
     assert.equal(normalizeText(doc?.toString()), normalizeText('<html>\n'
       + '<head></head><body>\n'
@@ -152,7 +152,7 @@ describe("preprocessor", () => {
   });
 
   it("should let users nest macros (1)", async () => {
-    var doc = await preprocessor.reset().read('test204.html');
+    const doc = await preprocessor.reset().read('test204.html');
     assert.isFalse(adjacentTextNodes(doc));
     assert.equal(normalizeText(doc?.toString()), normalizeText(`<html>
       <head>
@@ -166,7 +166,7 @@ describe("preprocessor", () => {
   });
 
   it("should let users nest macros (2)", async () => {
-    var doc = await preprocessor.reset().read('testNestedMacros1.html');
+    const doc = await preprocessor.reset().read('testNestedMacros1.html');
     assert.isFalse(adjacentTextNodes(doc));
     assert.equal(normalizeText(doc?.toString()), normalizeText(`<html>
       <head>
@@ -180,7 +180,7 @@ describe("preprocessor", () => {
   });
 
   it("should support [[*]] attributes in macros", async () => {
-    var doc = await preprocessor.reset().read('testAttributesInMacro.html');
+    const doc = await preprocessor.reset().read('testAttributesInMacro.html');
     assert.equal(normalizeText(doc?.toString(false, true)), normalizeText(`<html>
       <head></head><body>
         <div :ok=[[true]]>
@@ -191,7 +191,7 @@ describe("preprocessor", () => {
   });
 
   it("should let users extend macros (1)", async () => {
-    var doc = await preprocessor.reset().read('testExtendedMacro1.html');
+    const doc = await preprocessor.reset().read('testExtendedMacro1.html');
     assert.isFalse(adjacentTextNodes(doc));
     assert.equal(normalizeText(doc?.toString()), normalizeText(`<html>
       <head>
@@ -245,7 +245,7 @@ describe("preprocessor", () => {
       fname: 'dummy.html',
       content: '<html><body>Dummy</body></html>'
     }]);
-    var doc = await prepro.read('dummy.html');
+    const doc = await prepro.read('dummy.html');
     assert.isFalse(adjacentTextNodes(doc));
     assert.equal(normalizeText(doc?.toString()), normalizeText(
       `<html><head></head><body>Dummy</body></html>`
