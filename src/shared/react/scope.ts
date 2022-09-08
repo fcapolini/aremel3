@@ -1,4 +1,4 @@
-import Value, { ValueProps } from "./Value";
+import Value, { ValueProps } from "./value";
 
 const ANON_VALUE_PREFIX = 'v-';
 

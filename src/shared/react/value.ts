@@ -1,4 +1,4 @@
-import Scope from "./Scope";
+import Scope from "./scope";
 
 export declare type ValueFn = (obj: any) => any;
 

@@ -1,6 +1,6 @@
 import { assert } from "chai";
-import Scope from "../../../src/shared/react/Scope";
-import Value from "../../../src/shared/react/Value";
+import Scope from "../../../src/shared/react/scope";
+import Value from "../../../src/shared/react/value";
 
 describe('Value', function () {
 
