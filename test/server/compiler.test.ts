@@ -9,15 +9,11 @@ const preprocessor = new Preprocessor(process.cwd() + '/test/server/compiler');
 
 describe("compiler", () => {
 
-  it("should compile minimal page", async () => {
-    const ast = parseScript(`(function () {
-    })()`);
-    console.log(ast);
-
-    const doc = await preprocessor.reset().read('comp001.html');
-    const code = Compiler.compile(doc as HtmlDocument);
-    assert.equal(normalizeText(code), normalizeText(`(function() {
-    })();`));
-  });
+  // it("should compile minimal page", async () => {
+  //   // const doc = await preprocessor.reset().read('comp001.html');
+  //   // const code = Compiler.compile(doc as HtmlDocument);
+  //   // assert.equal(normalizeText(code), normalizeText(`(function() {
+  //   // })();`));
+  // });
 
 });
