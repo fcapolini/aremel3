@@ -22,7 +22,7 @@ export default class HtmlParser {
     var ret = new HtmlDocument(origin);
     var i = this.parseNodes(ret, s, 0, origin);
     if (i < s.length) {
-      new HtmlText(ret, ret, s.substr(i), i, s.length, origin);
+      new HtmlText(ret, ret, s.substring(i), i, s.length, origin);
     }
     return ret;
   }

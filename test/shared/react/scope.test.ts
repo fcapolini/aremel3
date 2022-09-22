@@ -1,7 +1,7 @@
 import { assert } from "chai";
 import Scope from "../../../src/shared/react/scope";
 
-describe('Scope', function () {
+describe('scope', function () {
 
 	it("should be root and have no parent", () => {
 		const scope = new Scope(null, {});
