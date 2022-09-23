@@ -1,29 +1,32 @@
 import { HtmlDocument, HtmlElement, HtmlText } from "./htmldom";
 import Preprocessor, { SourcePos } from "./preprocessor";
 
-export interface Src {
+export const AKA_ATTR = ':aka';
+
+export interface App {
   doc: HtmlDocument
   pre: Preprocessor
-  msg: SrcMsg[]
-  root?: SrcNode
+  root?: Node
+  errors: Error[]
 }
 
-export interface SrcMsg {
+export interface Node {
+  parent?: Node
+  children: Node[]
+  aka?: string
+  dom: HtmlElement
+  props: Map<string, Prop>
+}
+
+export interface Prop {
+  textNode?: HtmlText
+  val: string
+}
+
+export interface Error {
   type: 'err' | 'warn'
   msg: string
   pos?: SourcePos
-}
-
-export interface SrcNode {
-  parent?: SrcNode
-  aka?: string
-  dom: HtmlElement
-  props: Map<string, SrcProp>
-}
-
-export interface SrcProp {
-  textNode?: HtmlText
-  val: string
 }
 
 export function isNodeRoot(dom: HtmlElement): boolean {
@@ -52,4 +55,16 @@ export function containsExpression(text: string): boolean {
 
 export function isValidId(id: string): boolean {
   return /^(\w+)$/.test(id); //TODO: improve check
+}
+
+export function defaultAka(dom: HtmlElement): string | undefined {
+  let ret = undefined;
+  if (dom.tagName === 'HTML') {
+    ret = 'page';
+  } else if (dom.tagName === 'HEAD') {
+    ret = 'head';
+  } else if (dom.tagName === 'BODY') {
+    ret = 'body';
+  }
+  return ret;
 }

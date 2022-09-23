@@ -3,13 +3,13 @@ import { HtmlDocument, HtmlElement, HtmlText } from "./htmldom";
 import * as lang from "./lang";
 import Preprocessor from "./preprocessor";
 
-export function load(doc: HtmlDocument, pre: Preprocessor): lang.Src {
-  const ret: lang.Src = { doc: doc, pre: pre, msg: [] };
+export function load(doc: HtmlDocument, pre: Preprocessor): lang.App {
+  const ret: lang.App = { doc: doc, pre: pre, errors: [] };
   
   if (doc.firstElementChild) {
-    ret.root = loadNode(doc.firstElementChild as HtmlElement, pre, ret.msg);
+    ret.root = loadNode(doc.firstElementChild as HtmlElement, pre, ret.errors);
   } else {
-    ret.msg.push({
+    ret.errors.push({
       type: 'err',
       msg: 'missing root element',
       pos: pre.getSourcePos({ origin: 0, i1: 0, i2: 0 })
@@ -20,19 +20,45 @@ export function load(doc: HtmlDocument, pre: Preprocessor): lang.Src {
 }
 
 function loadNode(
-  dom: HtmlElement, pre: Preprocessor, msg: lang.SrcMsg[], parent?: lang.SrcNode
-): lang.SrcNode {
-  const ret: lang.SrcNode = { parent: parent, dom: dom, props: new Map() };
+  dom: HtmlElement, pre: Preprocessor, err: lang.Error[], parent?: lang.Node
+): lang.Node {
+  const ret: lang.Node = {
+    parent: parent,
+    children: [],
+    dom: dom,
+    props: new Map()
+  };
 
-  loadNodeProps(ret, pre, msg);
+  const roots = loadNodeProps(ret, pre, err, []);
+  roots.forEach(dom => {
+    const child = loadNode(dom, pre, err, ret);
+    ret.children.push(child);
+  });
 
   return ret;
 }
 
 function loadNodeProps(
-  node: lang.SrcNode, pre: Preprocessor, msg: lang.SrcMsg[]
-) {
+  node: lang.Node, pre: Preprocessor, err: lang.Error[], roots: HtmlElement[]
+): HtmlElement[] {
   function f(dom: HtmlElement) {
+    const aka = dom.getAttribute(lang.AKA_ATTR);
+    if (aka != null) {
+      if (lang.isValidId(aka)) {
+        node.aka = aka;
+      } else {
+        const attr = dom.attributes.get(lang.AKA_ATTR);
+        err.push({
+          type: 'err',
+          msg: `invalid name "${aka}"`,
+          pos: pre.getSourcePos(attr?.pos2)
+        });
+      }
+      dom.removeAttribute(lang.AKA_ATTR);
+    } else {
+      node.aka = lang.defaultAka(dom);
+    }
+
     dom.getAttributeNames().slice().forEach(key => {
       const val = dom.getAttribute(key) ?? '';
       if (lang.isPropertyId(key) || lang.containsExpression(val)) {
@@ -41,30 +67,12 @@ function loadNodeProps(
       }
     });
 
-    const aka = node.props.get(':aka');
-    if (aka) {
-      node.props.delete(':aka');
-      if (lang.isValidId(aka.val)) {
-        node.aka = aka.val;
-      } else {
-        msg.push({
-          type: 'err',
-          msg: `invalid name "${aka.val}"`,
-          pos: pre.getSourcePos(dom.pos)
-        });
-      }
-    } else if (dom.tagName === 'HTML') {
-      node.aka = 'page';
-    } else if (dom.tagName === 'HEAD') {
-      node.aka = 'head';
-    } else if (dom.tagName === 'BODY') {
-      node.aka = 'body';
-    }
-
     dom.childNodes.forEach(n => {
       if (n.nodeType === ELEMENT_NODE) {
         if (!lang.isNodeRoot(n as HtmlElement)) {
           f(n as HtmlElement);
+        } else {
+          roots.push(n as HtmlElement);
         }
       } else {
         const text = (n as HtmlText).nodeValue;
@@ -79,4 +87,5 @@ function loadNodeProps(
   }
 
   f(node.dom);
+  return roots;
 }

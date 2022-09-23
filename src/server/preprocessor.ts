@@ -105,28 +105,30 @@ export default class Preprocessor {
     return fname;
   }
 
-  getSourcePos(htmlPos: HtmlPos): SourcePos | undefined {
+  getSourcePos(htmlPos?: HtmlPos): SourcePos | undefined {
     var ret: SourcePos | undefined;
-    var fname = this.getOrigin(htmlPos.origin);
-    if (fname != null) {
-      ret = { fname: fname, line1: 1, column1: 1, line2: 1, column2: 1 };
-      var src = this.sources[htmlPos.origin], i = 0, j;
-      while ((j = src.indexOf('\n', i)) >= 0) {
-        if (j > htmlPos.i1) {
-          ret.column1 = Math.max(0, (htmlPos.i1 - i) + 1);
-          break;
+    if (htmlPos) {
+      var fname = this.getOrigin(htmlPos.origin);
+      if (fname != null) {
+        ret = { fname: fname, line1: 1, column1: 1, line2: 1, column2: 1 };
+        var src = this.sources[htmlPos.origin], i = 0, j;
+        while ((j = src.indexOf('\n', i)) >= 0) {
+          if (j > htmlPos.i1) {
+            ret.column1 = Math.max(0, (htmlPos.i1 - i) + 1);
+            break;
+          }
+          i = j + 1;
+          ret.line1++;
         }
-        i = j + 1;
-        ret.line1++;
-      }
-      ret.line2 = ret.line1;
-      while ((j = src.indexOf('\n', i)) >= 0) {
-        if (j > htmlPos.i2) {
-          ret.column2 = Math.max(0, (htmlPos.i2 - i) + 1);
-          break;
+        ret.line2 = ret.line1;
+        while ((j = src.indexOf('\n', i)) >= 0) {
+          if (j > htmlPos.i2) {
+            ret.column2 = Math.max(0, (htmlPos.i2 - i) + 1);
+            break;
+          }
+          i = j + 1;
+          ret.line2++;
         }
-        i = j + 1;
-        ret.line2++;
       }
     }
     return ret;
