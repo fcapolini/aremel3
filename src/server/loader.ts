@@ -1,13 +1,19 @@
-import { ELEMENT_NODE } from "../shared/dom";
+import { DomNode, ELEMENT_NODE } from "../shared/dom";
+import { StringBuf } from "../shared/util";
 import { HtmlDocument, HtmlElement, HtmlText } from "./htmldom";
 import * as lang from "./lang";
 import Preprocessor from "./preprocessor";
 
+interface Ctx {
+  nextId: number
+}
+
 export function load(doc: HtmlDocument, pre: Preprocessor): lang.App {
   const ret: lang.App = { doc: doc, pre: pre, errors: [] };
+  const ctx: Ctx = { nextId: 0 };
   
   if (doc.firstElementChild) {
-    ret.root = loadNode(doc.firstElementChild as HtmlElement, pre, ret.errors);
+    ret.root = loadNode(doc.firstElementChild as HtmlElement, pre, ret.errors, ctx);
   } else {
     ret.errors.push({
       type: 'err',
@@ -20,7 +26,7 @@ export function load(doc: HtmlDocument, pre: Preprocessor): lang.App {
 }
 
 function loadNode(
-  dom: HtmlElement, pre: Preprocessor, err: lang.Error[], parent?: lang.Node
+  dom: HtmlElement, pre: Preprocessor, err: lang.Error[], ctx: Ctx, parent?: lang.Node
 ): lang.Node {
   const ret: lang.Node = {
     parent: parent,
@@ -29,9 +35,9 @@ function loadNode(
     props: new Map()
   };
 
-  const roots = loadNodeProps(ret, pre, err, []);
+  const roots = loadNodeProps(ret, pre, err, [], ctx);
   roots.forEach(dom => {
-    const child = loadNode(dom, pre, err, ret);
+    const child = loadNode(dom, pre, err, ctx, ret);
     ret.children.push(child);
   });
 
@@ -39,7 +45,7 @@ function loadNode(
 }
 
 function loadNodeProps(
-  node: lang.Node, pre: Preprocessor, err: lang.Error[], roots: HtmlElement[]
+  node: lang.Node, pre: Preprocessor, err: lang.Error[], roots: HtmlElement[], ctx: Ctx
 ): HtmlElement[] {
   function f(dom: HtmlElement) {
     const aka = dom.getAttribute(lang.AKA_ATTR);
@@ -59,13 +65,7 @@ function loadNodeProps(
       node.aka = lang.defaultAka(dom);
     }
 
-    dom.getAttributeNames().slice().forEach(key => {
-      const val = dom.getAttribute(key) ?? '';
-      if (lang.isPropertyId(key) || lang.containsExpression(val)) {
-        node.props.set(key, { val: val });
-        dom.removeAttribute(key);
-      }
-    });
+    loadNodeAttributes(node, dom);
 
     dom.childNodes.forEach(n => {
       if (n.nodeType === ELEMENT_NODE) {
@@ -75,17 +75,73 @@ function loadNodeProps(
           roots.push(n as HtmlElement);
         }
       } else {
-        const text = (n as HtmlText).nodeValue;
-        if (lang.containsExpression(text)) {
-          node.props.set(`__t_${node.props.size}`, {
-            textNode: n as HtmlText,
-            val: text
-          });
-        }
+        // const text = (n as HtmlText).nodeValue;
+        loadNodeTexts(node, n as HtmlText, ctx);
       }
     });
   }
 
   f(node.dom);
   return roots;
+}
+
+function loadNodeAttributes(node: lang.Node, dom: HtmlElement) {
+  dom.getAttributeNames().slice().forEach(key => {
+    const val = dom.getAttribute(key) ?? '';
+    if (lang.isPropertyId(key)) {
+      if (dom.attributes.get(key)?.quote === lang.EXPR_ATTR_QUOTE) {
+        node.props.set(key, { val: `[[${val}]]` });
+      } else {
+        node.props.set(key, { val: val });
+      }
+      dom.removeAttribute(key);
+    } else if (dom.attributes.get(key)?.quote === lang.EXPR_ATTR_QUOTE) {
+      node.props.set(key, { val: `[[${val}]]` });
+      dom.setAttribute(key, '', '"');
+    } else if (lang.containsExpression(val)) {
+      node.props.set(key, { val: val });
+      dom.setAttribute(key, '');
+    }
+  });
+}
+
+function loadNodeTexts(node: lang.Node, dom: HtmlText, ctx: Ctx) {
+  const text = dom.nodeValue;
+
+  if (lang.containsExpression(text)) {
+    let i1, i2 = 0, i, id, n: DomNode | undefined;
+
+    while ((i1 = text.indexOf(lang.EXPR_MARKER1, i2)) >= 0) {
+      if (i1 > i2) {
+        n = dom.ownerDocument?.createTextNode(text.substring(i2, i1));
+        dom.parentElement?.insertBefore(n as DomNode, dom);
+      }
+      i2 = i1;
+      i1 += lang.EXPR_MARKER1_LEN;
+      if ((i = text.indexOf(lang.EXPR_MARKER2, i1)) >= i1) {
+        i2 = i;
+        id = node.props.size;
+        n = dom.ownerDocument?.createComment(`${lang.TEXT_COMMENT1}${id}`)
+        dom.parentElement?.insertBefore(n as DomNode, dom);
+        const expr = text.substring(i1, i2).trim();
+        if (expr.length > 0) {
+          node.props.set(`${lang.TEXT_ID_PREFIX}${id}`, {
+            val: `[[${expr}]]`
+          });
+        }
+        n = dom.ownerDocument?.createComment(`${lang.TEXT_COMMENT2}${id}`)
+        dom.parentElement?.insertBefore(n as DomNode, dom);
+        i2 += lang.EXPR_MARKER2_LEN;
+      } else {
+        break;
+      }
+    }
+
+    if (i2 < text.length) {
+      n = dom.ownerDocument?.createTextNode(text.substring(i2));
+      dom.parentElement?.insertBefore(n as DomNode, dom);
+    }
+
+    dom.remove();
+  }
 }

@@ -2,6 +2,14 @@ import { HtmlDocument, HtmlElement, HtmlText } from "./htmldom";
 import Preprocessor, { SourcePos } from "./preprocessor";
 
 export const AKA_ATTR = ':aka';
+export const EXPR_ATTR_QUOTE = '[';
+export const EXPR_MARKER1 = '[[';
+export const EXPR_MARKER2 = ']]';
+export const EXPR_MARKER1_LEN = EXPR_MARKER1.length;
+export const EXPR_MARKER2_LEN = EXPR_MARKER2.length;
+export const TEXT_ID_PREFIX = '__t$';
+export const TEXT_COMMENT1 = '-';
+export const TEXT_COMMENT2 = '-/';
 
 export interface App {
   doc: HtmlDocument
