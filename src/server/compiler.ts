@@ -1,4 +1,4 @@
-import { Src } from "./loader";
+import { Src } from "./lang";
 
 interface Dst {
 
