@@ -35,7 +35,7 @@ describe("loader", () => {
     const doc = await preprocessor.reset().read('loader002.html');
     const app = load(doc as HtmlDocument, preprocessor);
     assert.equal(app.root?.aka, 'app');
-    assert.equal(doc?.toString(), '<html><head></head><body></body></html>\n');
+    assert.equal(doc?.toString(), '<html data-aremel="0"><head data-aremel="1"></head><body data-aremel="2"></body></html>\n');
   });
 
   it(`003 html tag only w/ invalid :aka attribute`, async () => {
@@ -59,9 +59,9 @@ describe("loader", () => {
     assert.equal(nodeCount(app), 3);
     assert.equal(
       normalizeText(doc?.toString()),
-      normalizeText(`<html>
-        <head></head>
-        <body></body>
+      normalizeText(`<html data-aremel="0">
+        <head data-aremel="1"></head>
+        <body data-aremel="2"></body>
       </html>
       `)
     );
@@ -85,9 +85,9 @@ describe("loader", () => {
     assert.equal(app.root?.props.get(':v')?.val, 'en');
     assert.equal(
       normalizeText(doc?.toString()),
-      normalizeText(`<html>
-        <head></head>
-        <body></body>
+      normalizeText(`<html data-aremel="0">
+        <head data-aremel="1"></head>
+        <body data-aremel="2"></body>
       </html>
       `)
     );
@@ -106,10 +106,10 @@ describe("loader", () => {
     assert.equal(body?.props.size, 1);
     assert.equal(body?.props.get(`${l.TEXT_ID_PREFIX}0`)?.val, '[[v]]');
     assert.equal(
-      normalizeText(doc?.toString()),
-      normalizeText(`<html class="all" lang="">
-        <head></head>
-        <body><!--${l.TEXT_COMMENT1}0--><!--${l.TEXT_COMMENT2}0--></body>
+      normalizeText(doc?.toString(true)),
+      normalizeText(`<html class="all" data-aremel="0" lang="">
+        <head data-aremel="1"></head>
+        <body data-aremel="2"><!--${l.TEXT_COMMENT1}0--><!--${l.TEXT_COMMENT2}0--></body>
       </html>
       `)
     );
@@ -128,10 +128,10 @@ describe("loader", () => {
     assert.equal(body?.props.size, 1);
     assert.equal(body?.props.get(`${l.TEXT_ID_PREFIX}0`)?.val, '[[v]]');
     assert.equal(
-      normalizeText(doc?.toString()),
-      normalizeText(`<html class="all" lang="">
-        <head></head>
-        <body>value: <!--${l.TEXT_COMMENT1}0--><!--${l.TEXT_COMMENT2}0-->...</body>
+      normalizeText(doc?.toString(true)),
+      normalizeText(`<html class="all" data-aremel="0" lang="">
+        <head data-aremel="1"></head>
+        <body data-aremel="2">value: <!--${l.TEXT_COMMENT1}0--><!--${l.TEXT_COMMENT2}0-->...</body>
       </html>
       `)
     );

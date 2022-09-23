@@ -1,7 +1,9 @@
 import { HtmlDocument, HtmlElement, HtmlText } from "./htmldom";
 import Preprocessor, { SourcePos } from "./preprocessor";
 
-export const AKA_ATTR = ':aka';
+export const ID_ATTR = 'data-aremel';
+export const LOGIC_ATTR_PREFIX = ':';
+export const AKA_ATTR = LOGIC_ATTR_PREFIX + 'aka';
 export const EXPR_ATTR_QUOTE = '[';
 export const EXPR_MARKER1 = '[[';
 export const EXPR_MARKER2 = ']]';
@@ -10,6 +12,7 @@ export const EXPR_MARKER2_LEN = EXPR_MARKER2.length;
 export const TEXT_ID_PREFIX = '__t$';
 export const TEXT_COMMENT1 = '-';
 export const TEXT_COMMENT2 = '-/';
+export const RESERVED_PREFIX = '__';
 
 export interface App {
   doc: HtmlDocument
@@ -19,6 +22,7 @@ export interface App {
 }
 
 export interface Node {
+  id: number
   parent?: Node
   children: Node[]
   aka?: string
@@ -62,7 +66,7 @@ export function containsExpression(text: string): boolean {
 }
 
 export function isValidId(id: string): boolean {
-  return /^(\w+)$/.test(id); //TODO: improve check
+  return /^(\w+)$/.test(id) && !id.startsWith(RESERVED_PREFIX); //TODO: improve check
 }
 
 export function defaultAka(dom: HtmlElement): string | undefined {

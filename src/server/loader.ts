@@ -3,11 +3,16 @@ import { HtmlDocument, HtmlElement, HtmlText } from "./htmldom";
 import * as lang from "./lang";
 import Preprocessor from "./preprocessor";
 
+interface Context {
+  nextId: number
+}
+
 export function load(doc: HtmlDocument, pre: Preprocessor): lang.App {
+  const ctx: Context = { nextId: 0 };
   const ret: lang.App = { doc: doc, pre: pre, errors: [] };
   
   if (doc.firstElementChild) {
-    ret.root = loadNode(doc.firstElementChild as HtmlElement, pre, ret.errors);
+    ret.root = loadNode(doc.firstElementChild as HtmlElement, pre, ret.errors, ctx);
   } else {
     ret.errors.push({
       type: 'err',
@@ -20,18 +25,21 @@ export function load(doc: HtmlDocument, pre: Preprocessor): lang.App {
 }
 
 function loadNode(
-  dom: HtmlElement, pre: Preprocessor, err: lang.Error[], parent?: lang.Node
+  dom: HtmlElement, pre: Preprocessor, err: lang.Error[], ctx: Context,
+  parent?: lang.Node
 ): lang.Node {
   const ret: lang.Node = {
+    id: ctx.nextId++,
     parent: parent,
     children: [],
     dom: dom,
     props: new Map()
   };
 
+  dom.setAttribute(lang.ID_ATTR, `${ret.id}`);
   const roots = loadNodeProps(ret, pre, err, []);
   roots.forEach(dom => {
-    const child = loadNode(dom, pre, err, ret);
+    const child = loadNode(dom, pre, err, ctx, ret);
     ret.children.push(child);
   });
 
