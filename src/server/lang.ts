@@ -1,54 +1,55 @@
-import { HtmlDocument, HtmlElement } from "./htmldom";
-import HtmlParser from "./htmlparser";
+import { HtmlDocument, HtmlElement, HtmlText } from "./htmldom";
+import Preprocessor, { SourcePos } from "./preprocessor";
 
-export interface App {
-  html: string,
-  children?: App[]
+export interface Src {
+  doc: HtmlDocument
+  pre: Preprocessor
+  msg: SrcMsg[]
+  root?: SrcNode
 }
 
-export interface Scope {
-  parent?: Scope,
-  children: Scope[],
-  dom: HtmlElement,
-  values: Value[],
+export interface SrcMsg {
+  type: 'err' | 'warn'
+  msg: string
+  pos?: SourcePos
 }
 
-export interface Value {
-  scope: Scope,
+export interface SrcNode {
+  parent?: SrcNode
+  aka?: string
+  dom: HtmlElement
+  props: Map<string, SrcProp>
 }
 
-export interface Runtime {
-  doc: HtmlDocument,
-  root: Scope,
+export interface SrcProp {
+  textNode?: HtmlText
+  val: string
 }
 
-export function load(app: App, doc: HtmlDocument): Runtime {
-  const parser = new HtmlParser();
-
-  function f(src: App, dst: HtmlElement, parent?: Scope): Scope {
-    const dom = parser.parseDoc(src.html);
-    const main = dom.firstElementChild ?? dst;
-    const scope: Scope = {
-      parent: parent,
-      children: [],
-      dom: main as HtmlElement,
-      values: []
-    };
-    parent && parent.children.push(scope);
-    
-    // loadTexts()
-
-    while (dom.children.length > 0) {
-      dst.appendChild(dom.children[0].remove());
-    }
-
-    if (src.children) {
-      src.children.forEach((src) => f(src, main as HtmlElement, parent));
-    }
-
-    return scope;
+export function isNodeRoot(dom: HtmlElement): boolean {
+  let ret = false;
+  if (dom.tagName === 'HEAD' || dom.tagName === 'BODY') {
+    ret = true;
+  } else {
+    dom.getAttributeNames().forEach(key => {
+      if (isPropertyId(key)) {
+        ret = true;
+      }
+    });
   }
+  return ret;
+}
 
-  const root = f(app, doc);
-  return { doc: doc, root: root };
+export function isPropertyId(key: string): boolean {
+  return key.includes(':');
+}
+
+export function containsExpression(text: string): boolean {
+  const i1 = text.indexOf('[[');
+  const i2 = text.indexOf(']]');
+  return (i1 >= 0 && i2 > i1);
+}
+
+export function isValidId(id: string): boolean {
+  return /^(\w+)$/.test(id); //TODO: improve check
 }
