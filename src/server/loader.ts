@@ -1,19 +1,13 @@
 import { DomNode, ELEMENT_NODE } from "../shared/dom";
-import { StringBuf } from "../shared/util";
 import { HtmlDocument, HtmlElement, HtmlText } from "./htmldom";
 import * as lang from "./lang";
 import Preprocessor from "./preprocessor";
 
-interface Ctx {
-  nextId: number
-}
-
 export function load(doc: HtmlDocument, pre: Preprocessor): lang.App {
   const ret: lang.App = { doc: doc, pre: pre, errors: [] };
-  const ctx: Ctx = { nextId: 0 };
   
   if (doc.firstElementChild) {
-    ret.root = loadNode(doc.firstElementChild as HtmlElement, pre, ret.errors, ctx);
+    ret.root = loadNode(doc.firstElementChild as HtmlElement, pre, ret.errors);
   } else {
     ret.errors.push({
       type: 'err',
@@ -26,7 +20,7 @@ export function load(doc: HtmlDocument, pre: Preprocessor): lang.App {
 }
 
 function loadNode(
-  dom: HtmlElement, pre: Preprocessor, err: lang.Error[], ctx: Ctx, parent?: lang.Node
+  dom: HtmlElement, pre: Preprocessor, err: lang.Error[], parent?: lang.Node
 ): lang.Node {
   const ret: lang.Node = {
     parent: parent,
@@ -35,9 +29,9 @@ function loadNode(
     props: new Map()
   };
 
-  const roots = loadNodeProps(ret, pre, err, [], ctx);
+  const roots = loadNodeProps(ret, pre, err, []);
   roots.forEach(dom => {
-    const child = loadNode(dom, pre, err, ctx, ret);
+    const child = loadNode(dom, pre, err, ret);
     ret.children.push(child);
   });
 
@@ -45,7 +39,7 @@ function loadNode(
 }
 
 function loadNodeProps(
-  node: lang.Node, pre: Preprocessor, err: lang.Error[], roots: HtmlElement[], ctx: Ctx
+  node: lang.Node, pre: Preprocessor, err: lang.Error[], roots: HtmlElement[]
 ): HtmlElement[] {
   function f(dom: HtmlElement) {
     const aka = dom.getAttribute(lang.AKA_ATTR);
@@ -75,8 +69,7 @@ function loadNodeProps(
           roots.push(n as HtmlElement);
         }
       } else {
-        // const text = (n as HtmlText).nodeValue;
-        loadNodeTexts(node, n as HtmlText, ctx);
+        loadNodeTexts(node, n as HtmlText);
       }
     });
   }
@@ -105,7 +98,7 @@ function loadNodeAttributes(node: lang.Node, dom: HtmlElement) {
   });
 }
 
-function loadNodeTexts(node: lang.Node, dom: HtmlText, ctx: Ctx) {
+function loadNodeTexts(node: lang.Node, dom: HtmlText) {
   const text = dom.nodeValue;
 
   if (lang.containsExpression(text)) {
