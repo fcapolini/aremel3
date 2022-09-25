@@ -58,6 +58,35 @@ describe("runtime", () => {
     );
   });
 
+  it(`dependent value`, async () => {
+    const doc = baseDoc();
+    const state = baseState();
+    const body = state.root.children?.at(1) as rt.ScopeState;
+    body.values['v'] = { fn: () => 'main' };
+    //
+    // NOTE: in order to access other values, value functions must be classic
+    // functions, not arrow functions, so they support `apply()` and `this`.
+    //
+    // see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions
+    //
+    // The compiler will generate classic functions and prefix accesses to non
+    // local vars with `this.`.
+    //
+    // At runtime, `this` will be a Proxy object that will resolve the name
+    // in its `get()` and `set()` methods.
+    //
+    body.values['attr_class'] = { fn: function() { /* @ts-ignore */ return this.v; } };
+    const app = new rt.App(doc, state);
+    app.refresh();
+    assert.equal(
+      normalizeText(doc.firstElementChild?.outerHTML),
+      normalizeText(`<html data-aremel="0">
+        <head data-aremel="1"></head>
+        <body data-aremel="2" class="main"></body>
+      </html>`)
+    );
+  });
+
 });
 
 // =============================================================================
@@ -73,7 +102,6 @@ function baseDoc(): DomDocument {
 
 function baseState(): rt.AppState {
   return {
-    cycle: 0,
     root: {
       id: '0', aka: 'page', values: {},
       children: [
