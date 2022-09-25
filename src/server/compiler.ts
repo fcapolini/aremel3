@@ -1,7 +1,7 @@
 import { parseScript } from "esprima";
 import * as es from "estree";
 import * as lang from "./lang";
-import * as rt from "./runtime";
+import * as rt from "../shared/runtime";
 
 interface Context {
   nextId: number

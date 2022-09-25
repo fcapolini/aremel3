@@ -4,7 +4,7 @@ import { compile } from "../../src/server/compiler";
 import { HtmlDocument } from "../../src/server/htmldom";
 import { load } from "../../src/server/loader";
 import Preprocessor from "../../src/server/preprocessor";
-import * as rt from "../../src/server/runtime";
+import * as rt from "../../src/shared/runtime";
 import { normalizeText } from "../../src/shared/util";
 
 const preprocessor = new Preprocessor(process.cwd() + '/test/server/compiler');
