@@ -1,12 +1,13 @@
 import { DomDocument, DomElement, ELEMENT_NODE } from "./dom";
 import * as lang from "../server/lang";
+import { makeHyphenName } from "./util";
 
 export const NOTNULL_FN = lang.RESERVED_PREFIX + 'nn';
-export const ON_VALUE_PREFIX = 'on_';
 export const ATTR_VALUE_PREFIX = 'attr_';
-export const EVENT_VALUE_PREFIX = 'event_';
 export const CLASS_VALUE_PREFIX = 'class_';
 export const STYLE_VALUE_PREFIX = 'style_';
+export const ON_VALUE_PREFIX = 'on_';
+export const EVENT_VALUE_PREFIX = 'event_';
 
 export interface AppState {
   cycle: number
@@ -16,14 +17,15 @@ export interface AppState {
 export interface ScopeState {
   id: string
   aka?: string
-  values: { [key: string]: ScopeValue }
+  values: { [key: string]: ValueState }
   children?: ScopeState[]
 }
 
-export interface ScopeValue {
-  v: any
+export interface ValueState {
+  fn: () => any
   cycle?: number
-  fn?: () => any
+  k?: string
+  v?: any
 }
 
 // =============================================================================
@@ -41,6 +43,11 @@ export class App {
     this.state = state;
     this.domMap = this.getDomMap(doc);
     this.root = new Scope(this, state.root);
+  }
+
+  refresh() {
+    this.state.cycle++;
+    this.root.refresh();
   }
 
   getDomMap(doc: DomDocument) {
@@ -80,7 +87,12 @@ export class Scope {
     state.children?.forEach(s => new Scope(app, s, this));
   }
 
-  lookup(prop: string): ScopeValue | undefined {
+  refresh() {
+    Object.keys(this.obj).forEach((k) => this.obj[k]);
+    this.children.forEach(s => s.refresh());
+  }
+
+  lookup(prop: string): ValueState | undefined {
     let ret = undefined;
     let scope: Scope | undefined = this;
     while (scope && !ret) {
@@ -90,8 +102,21 @@ export class Scope {
     }
     return ret;
   }
+
+  setAttr(k: string, v: any) {
+    if (v != null) {
+      this.dom?.setAttribute(k, `${v}`);
+    } else {
+      this.dom?.removeAttribute(k);
+    }
+  }
 }
 
+// =============================================================================
+// Scope
+// =============================================================================
+
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy
 class ScopeHandler implements ProxyHandler<any> {
   scope: Scope;
 
@@ -101,6 +126,21 @@ class ScopeHandler implements ProxyHandler<any> {
 
   get(target: any, prop: string, receiver?: any) {
     const value = this.scope.lookup(prop);
+    if (value && (!value.cycle || value.cycle < this.scope.app.state.cycle)) {
+      value.cycle = this.scope.app.state.cycle;
+      // refresh
+      const v1 = value.v;
+      value.v = value.fn();
+      // apply
+      if (v1 == null ? value.v != null : v1 !== value.v) {
+        if (prop.startsWith(ATTR_VALUE_PREFIX)) {
+          value.k ??= makeHyphenName(prop.substring(ATTR_VALUE_PREFIX.length));
+          this.scope.setAttr(value.k, value.v);
+        }
+      }
+      // propagate
+      //TODO
+    }
     return value?.v;
   }
 
