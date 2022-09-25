@@ -2,17 +2,28 @@ import { DomDocument, DomElement, ELEMENT_NODE } from "./dom";
 import * as lang from "../server/lang";
 
 export const NOTNULL_FN = lang.RESERVED_PREFIX + 'nn';
-export const DOM_VALUE_PREFIX = 'dom_';
+export const ON_VALUE_PREFIX = 'on_';
+export const ATTR_VALUE_PREFIX = 'attr_';
+export const EVENT_VALUE_PREFIX = 'event_';
+export const CLASS_VALUE_PREFIX = 'class_';
+export const STYLE_VALUE_PREFIX = 'style_';
 
 export interface AppState {
+  cycle: number
   root: ScopeState
 }
 
 export interface ScopeState {
   id: string
   aka?: string
-  props: any
+  values: { [key: string]: ScopeValue }
   children?: ScopeState[]
+}
+
+export interface ScopeValue {
+  v: any
+  cycle?: number
+  fn?: () => any
 }
 
 // =============================================================================
@@ -53,7 +64,7 @@ export class Scope {
 	state: ScopeState
 	parent?: Scope
 	children: Scope[]
-	proxy: any
+	obj: any
   dom?: DomElement
 
   constructor(app:App, state: ScopeState, parent?: Scope) {
@@ -61,12 +72,23 @@ export class Scope {
     this.state = state;
     this.parent = parent;
     this.children = [];
-    this.proxy = new Proxy<any>(this.state.props, new ScopeHandler(this))
+    this.obj = new Proxy<any>(this.state.values, new ScopeHandler(this))
     this.dom = app.domMap.get(state.id);
     if (parent) {
       parent.children.push(this);
     }
     state.children?.forEach(s => new Scope(app, s, this));
+  }
+
+  lookup(prop: string): ScopeValue | undefined {
+    let ret = undefined;
+    let scope: Scope | undefined = this;
+    while (scope && !ret) {
+      const target = scope.state.values;
+      ret = Reflect.get(target, prop, target);
+      scope = scope.parent;
+    }
+    return ret;
   }
 }
 
@@ -78,10 +100,13 @@ class ScopeHandler implements ProxyHandler<any> {
   }
 
   get(target: any, prop: string, receiver?: any) {
-    return Reflect.get(target, prop, receiver);
+    const value = this.scope.lookup(prop);
+    return value?.v;
   }
 
   set(target: any, prop: string, val: any, receiver?: any) {
-    return Reflect.set(target, prop, val, receiver);
+    const value = this.scope.lookup(prop);
+    value && (value.v = val);
+    return (!!value);
   }
 }

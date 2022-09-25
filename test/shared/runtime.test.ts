@@ -16,6 +16,16 @@ describe("runtime", () => {
     assert.equal(app.root.children[1].dom, app.domMap.get('2'));
   });
 
+  it(`root value`, async () => {
+    const doc = baseDoc();
+    const state = baseState();
+    state.root.values['v'] = { v: 1 };
+    const app = new rt.App(doc, state);
+    assert.equal(app.root.obj.v, 1);
+    app.root.obj.v = 2;
+    assert.equal(app.root.state.values['v'].v, 2);
+  });
+
 });
 
 // =============================================================================
@@ -31,13 +41,13 @@ function baseDoc(): DomDocument {
 
 function baseState(): rt.AppState {
   return {
+    cycle: 0,
     root: {
-      id: '0', aka: 'page', props: {},
-      children: [{
-        id: '1', aka: 'head', props: {}
-      }, {
-        id: '2', aka: 'body', props: {}
-      }]
+      id: '0', aka: 'page', values: {},
+      children: [
+        { id: '1', aka: 'head', values: {} },
+        { id: '2', aka: 'body', values: {} }
+      ]
     }
   };
 }

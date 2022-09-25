@@ -61,7 +61,7 @@ function compileNodeProperty(
   if (key.startsWith(lang.LOGIC_ATTR_PREFIX)) {
     key = key.substring(1);
   } else {
-    key = rt.DOM_VALUE_PREFIX + key;
+    key = rt.ATTR_VALUE_PREFIX + key;
   }
   props.push({
     type: 'Property',
