@@ -45,7 +45,7 @@ describe("runtime", () => {
   it(`body attribute value`, async () => {
     const doc = baseDoc();
     const state = baseState();
-    const body = state.root.children?.at(1) as rt.ScopeState;
+    const body = (state.root.children && state.root.children[1]) as rt.ScopeState;
     body.values['attr_class'] = { fn: () => 'main', t: 'attribute', k: 'class' };
     const app = new rt.App(doc, state);
     app.refresh();
@@ -61,7 +61,7 @@ describe("runtime", () => {
   it(`dependent value`, async () => {
     const doc = baseDoc();
     const state = baseState();
-    const body = state.root.children?.at(1) as rt.ScopeState;
+    const body = (state.root.children && state.root.children[1]) as rt.ScopeState;
     body.values['v'] = { fn: () => 'main' };
     //
     // NOTE: in order to access other values, value functions must be classic
