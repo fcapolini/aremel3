@@ -23,9 +23,10 @@ export interface ScopeState {
 }
 
 export interface ValueState {
-  fn: () => any
+  fn?: () => any
   pos?: ValuePos
   cycle?: number
+  t?: 'attribute' | 'class' | 'style'
   k?: string
   v?: any
   upstream?: Set<ValueState>
@@ -155,54 +156,78 @@ class ScopeHandler implements ProxyHandler<any> {
 
   get(target: any, prop: string, receiver?: any) {
     const value = this.scope.lookup(prop);
-    if (value && (!value.cycle || value.cycle < (this.app.state.cycle ?? 0))) {
-      value.cycle = this.app.state.cycle ?? 0;
-      
-      const old = value.v;
-      if (this.app.pullStack && this.app.pullStack.length > 0) {
-        const o = this.app.pullStack[this.app.pullStack.length - 1];
-        (value.downstream ?? (value.downstream = new Set())).add(o);
-        (o.upstream ?? (o.upstream = new Set())).add(value);
-      }
-      
-      this.app.pullStack?.push(value);
-      try {
-        value.v = value.fn.apply(this.scope.obj);
-      } catch (ex: any) {
-        //TODO (+ use ValueState.pos if available)
-        console.log(ex);
-      }
-      this.app.pullStack?.pop();
-      
-      if (old == null ? value.v != null : old !== value.v) {
-        this.reflect(prop, value);
-        this.propagate(value);
-      }
-    }
+    value && this.update(value);
     return value?.v;
   }
 
   set(target: any, prop: string, val: any, receiver?: any) {
     const value = this.scope.lookup(prop);
-    value && (value.v = val);
-    return (!!value);
+    // value && (value.v = val);
+
+    if (value) {
+      const old = value.v;
+      value.v = val;
+      delete value.fn;
+      if (old == null ? value.v != null : old !== value.v) {
+        this.reflect(value);
+        this.propagate(value);
+      }
+    }
+
+    return !!value;
   }
 
-  reflect(prop: string, value: ValueState) {
-    if (prop.startsWith(ATTR_VALUE_PREFIX)) {
-      value.k ??= makeHyphenName(prop.substring(ATTR_VALUE_PREFIX.length));
-      this.scope.setAttr(value.k, value.v);
+  private update(value: ValueState) {
+    if (value) {
+      if (this.app.pullStack) {
+        if (this.app.pullStack.length > 0) {
+          const o = this.app.pullStack[this.app.pullStack.length - 1];
+          (value.downstream ?? (value.downstream = new Set())).add(o);
+          (o.upstream ?? (o.upstream = new Set())).add(value);
+        }
+        this.app.pullStack?.push(value);
+      }
+      
+      if (value.fn) {
+        if (!value.cycle || value.cycle < (this.app.state.cycle ?? 0)) {
+          value.cycle = this.app.state.cycle ?? 0;
+          const old = value.v;
+
+          try {
+            value.v = value.fn.apply(this.scope.obj);
+          } catch (ex: any) {
+            //TODO (+ use ValueState.pos if available)
+            console.log(ex);
+          }
+
+          if (old == null ? value.v != null : old !== value.v) {
+            this.reflect(value);
+            this.propagate(value);
+          }
+        }
+      }
+
+      if (this.app.pullStack) {
+        this.app.pullStack?.pop();
+      }
     }
   }
 
-  propagate(value: ValueState) {
+  private reflect(value: ValueState) {
+    if (value.t === 'attribute') {
+      // value.k ??= makeHyphenName(prop.substring(ATTR_VALUE_PREFIX.length));
+      value.k && this.scope.setAttr(value.k, value.v);
+    }
+  }
+
+  private propagate(value: ValueState) {
     if (value.downstream && this.app.pushLevel != null) {
-      if (this.app.pushLevel === 0) {
+      if ((this.app.pushLevel ?? 0) === 0) {
         this.app.state.cycle = (this.app.state.cycle ?? 0) + 1;
       }
       this.app.pushLevel++;
       try {
-        // value.downstream.forEach(v => v.)
+        value.downstream.forEach(v => this.update(v));
       } catch (ignored: any) {}
       this.app.pushLevel--;
     }

@@ -30,7 +30,7 @@ describe("runtime", () => {
   it(`root attribute value`, async () => {
     const doc = baseDoc();
     const state = baseState();
-    state.root.values['attr_lang'] = { fn: () => 'en' };
+    state.root.values['attr_lang'] = { fn: () => 'en', t: 'attribute', k: 'lang' };
     const app = new rt.App(doc, state);
     app.refresh();
     assert.equal(
@@ -46,7 +46,7 @@ describe("runtime", () => {
     const doc = baseDoc();
     const state = baseState();
     const body = state.root.children?.at(1) as rt.ScopeState;
-    body.values['attr_class'] = { fn: () => 'main' };
+    body.values['attr_class'] = { fn: () => 'main', t: 'attribute', k: 'class' };
     const app = new rt.App(doc, state);
     app.refresh();
     assert.equal(
@@ -67,22 +67,41 @@ describe("runtime", () => {
     // NOTE: in order to access other values, value functions must be classic
     // functions, not arrow functions, so they support `apply()` and `this`.
     //
-    // see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions
+    // see:
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions
     //
-    // The compiler will generate classic functions and prefix accesses to non
-    // local vars with `this.`.
+    // The compiler will generate classic functions and add `this.` as needed.
     //
-    // At runtime, `this` will be a Proxy object that will resolve the name
-    // in its `get()` and `set()` methods.
+    // At runtime, `this` will be a Proxy object that will resolve the property
+    // name in its `get()` and `set()` methods.
     //
-    body.values['attr_class'] = { fn: function() { /* @ts-ignore */ return this.v; } };
+    body.values['attr_class'] = { fn: function() { /* @ts-ignore */ return this.v; }, t: 'attribute', k: 'class' };
     const app = new rt.App(doc, state);
+
+    assert.equal(
+      normalizeText(doc.firstElementChild?.outerHTML),
+      normalizeText(`<html data-aremel="0">
+        <head data-aremel="1"></head>
+        <body data-aremel="2"></body>
+      </html>`)
+    );
+
     app.refresh();
     assert.equal(
       normalizeText(doc.firstElementChild?.outerHTML),
       normalizeText(`<html data-aremel="0">
         <head data-aremel="1"></head>
         <body data-aremel="2" class="main"></body>
+      </html>`)
+    );
+
+    const bodyObj = app.root.children.at(1)?.obj as any;
+    bodyObj.v = 'other';
+    assert.equal(
+      normalizeText(doc.firstElementChild?.outerHTML),
+      normalizeText(`<html data-aremel="0">
+        <head data-aremel="1"></head>
+        <body data-aremel="2" class="other"></body>
       </html>`)
     );
   });
