@@ -95,7 +95,7 @@ describe("runtime", () => {
       </html>`)
     );
 
-    const bodyObj = app.root.children.at(1)?.obj as any;
+    const bodyObj = (app.root.children && app.root.children[1]?.obj) as any;
     bodyObj.v = 'other';
     assert.equal(
       normalizeText(doc.firstElementChild?.outerHTML),
