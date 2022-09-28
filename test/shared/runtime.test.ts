@@ -2,7 +2,28 @@ import { assert } from "chai";
 import HtmlParser from "../../src/server/htmlparser";
 import { DomDocument } from "../../src/shared/dom";
 import * as rt from "../../src/shared/runtime";
+import * as lang from "../../src/server/lang";
 import { normalizeText } from "../../src/shared/util";
+import { HtmlElement } from "../../src/server/htmldom";
+
+function baseDoc(): DomDocument {
+  return HtmlParser.parse(`<html data-aremel="0">
+    <head data-aremel="1"></head>
+    <body data-aremel="2"></body>
+  </html>`) as DomDocument;
+}
+
+function baseState(): rt.AppState {
+  return {
+    root: {
+      id: '0', aka: 'page', values: {},
+      children: [
+        { id: '1', aka: 'head', values: {} },
+        { id: '2', aka: 'body', values: {} }
+      ]
+    }
+  };
+}
 
 describe("runtime", () => {
 
@@ -58,7 +79,7 @@ describe("runtime", () => {
     );
   });
 
-  it(`dependent value`, async () => {
+  it(`dependent attribute value`, async () => {
     const doc = baseDoc();
     const state = baseState();
     const body = (state.root.children && state.root.children[1]) as rt.ScopeState;
@@ -75,9 +96,12 @@ describe("runtime", () => {
     // At runtime, `this` will be a Proxy object that will resolve the property
     // name in its `get()` and `set()` methods.
     //
-    body.values['attr_class'] = { fn: function() { /* @ts-ignore */ return this.v; }, t: 'attribute', k: 'class' };
+    body.values['attr_class'] = {
+      fn: function() { /* @ts-ignore */ return 'base ' + this.v; },
+      t: 'attribute',
+      k: 'class'
+    };
     const app = new rt.App(doc, state);
-
     assert.equal(
       normalizeText(doc.firstElementChild?.outerHTML),
       normalizeText(`<html data-aremel="0">
@@ -85,48 +109,58 @@ describe("runtime", () => {
         <body data-aremel="2"></body>
       </html>`)
     );
-
     app.refresh();
     assert.equal(
       normalizeText(doc.firstElementChild?.outerHTML),
       normalizeText(`<html data-aremel="0">
         <head data-aremel="1"></head>
-        <body data-aremel="2" class="main"></body>
+        <body data-aremel="2" class="base main"></body>
       </html>`)
     );
-
     const bodyObj = (app.root.children && app.root.children[1]?.obj) as any;
     bodyObj.v = 'other';
     assert.equal(
       normalizeText(doc.firstElementChild?.outerHTML),
       normalizeText(`<html data-aremel="0">
         <head data-aremel="1"></head>
-        <body data-aremel="2" class="other"></body>
+        <body data-aremel="2" class="base other"></body>
+      </html>`)
+    );
+  });
+
+  it(`dependent text value`, async () => {
+    const doc = baseDoc();
+    const e = doc.firstElementChild?.firstElementChild?.nextElementSibling as HtmlElement;
+    e.addChild(doc.createTextNode('Hello '));
+    e.addChild(doc.createComment(lang.TEXT_COMMENT1 + '0'));
+    e.addChild(doc.createTextNode(' '));
+    e.addChild(doc.createComment(lang.TEXT_COMMENT2 + '0'));
+    e.addChild(doc.createTextNode('!'));
+    const state = baseState();
+    const body = (state.root.children && state.root.children[1]) as rt.ScopeState;
+    body.values['v'] = { fn: () => 'Alice' };
+    body.values[`${lang.TEXT_ID_PREFIX}0`] = {
+      fn: function() { /* @ts-ignore */ return this.v; },
+      t: 'text',
+      k: '0'
+    };
+    const app = new rt.App(doc, state).refresh();
+    assert.equal(
+      normalizeText(doc.firstElementChild?.outerHTML),
+      normalizeText(`<html data-aremel="0">
+        <head data-aremel="1"></head>
+        <body data-aremel="2">Hello <!---:0-->Alice<!---/0-->!</body>
+      </html>`)
+    );
+    const bodyObj = (app.root.children && app.root.children[1]?.obj) as any;
+    bodyObj.v = 'Bob';
+    assert.equal(
+      normalizeText(doc.firstElementChild?.outerHTML),
+      normalizeText(`<html data-aremel="0">
+        <head data-aremel="1"></head>
+        <body data-aremel="2">Hello <!---:0-->Bob<!---/0-->!</body>
       </html>`)
     );
   });
 
 });
-
-// =============================================================================
-// util
-// =============================================================================
-
-function baseDoc(): DomDocument {
-  return HtmlParser.parse(`<html data-aremel="0">
-    <head data-aremel="1"></head>
-    <body data-aremel="2"></body>
-  </html>`) as DomDocument;
-}
-
-function baseState(): rt.AppState {
-  return {
-    root: {
-      id: '0', aka: 'page', values: {},
-      children: [
-        { id: '1', aka: 'head', values: {} },
-        { id: '2', aka: 'body', values: {} }
-      ]
-    }
-  };
-}

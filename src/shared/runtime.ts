@@ -1,4 +1,4 @@
-import { DomDocument, DomElement, ELEMENT_NODE } from "./dom";
+import { COMMENT_NODE, DomDocument, DomElement, DomTextNode, ELEMENT_NODE, TEXT_NODE } from "./dom";
 import * as lang from "../server/lang";
 import { makeHyphenName } from "./util";
 
@@ -26,7 +26,7 @@ export interface ValueState {
   fn?: () => any
   pos?: ValuePos
   cycle?: number
-  t?: 'attribute' | 'class' | 'style'
+  t?: 'attribute' | 'class' | 'style' | 'text'
   k?: string
   v?: any
   upstream?: Set<ValueState>
@@ -66,6 +66,7 @@ export class App {
     (scope ?? this.root).refresh();
     delete this.pullStack;
     this.pushLevel = 0;
+    return this;
   }
 
   getDomMap(doc: DomDocument) {
@@ -91,6 +92,7 @@ export class Scope {
 	children: Scope[]
 	obj: any
   dom?: DomElement
+  textMap?: Map<string, DomTextNode>
 
   constructor(app: App, state: ScopeState, parent?: Scope) {
     this.app = app;
@@ -99,10 +101,34 @@ export class Scope {
     this.children = [];
     this.obj = new Proxy<any>(this.state.values, new ScopeHandler(app, this))
     this.dom = app.domMap.get(state.id);
+    this.textMap = this.getTextMap();
     if (parent) {
       parent.children.push(this);
     }
     state.children?.forEach(s => new Scope(app, s, this));
+  }
+
+  getTextMap() {
+    const ret = new Map<string, DomTextNode>();
+    function f(e: DomElement) {
+      e.childNodes.forEach(n => {
+        if (n.nodeType === COMMENT_NODE) {
+          let s = (n as DomTextNode).nodeValue;
+          if (s.startsWith(lang.TEXT_COMMENT1)) {
+            const t = n.nextSibling;
+            if (t?.nodeType === TEXT_NODE) {
+              ret.set(s.substring(lang.TEXT_COMMENT1_LEN), t as DomTextNode);
+            }
+          }
+        } else if (n.nodeType === ELEMENT_NODE) {
+          if (!(n as DomElement).getAttribute(lang.ID_ATTR)) {
+            f(n as DomElement);
+          }
+        }
+      });
+    }
+    this.dom && f(this.dom);
+    return ret.size > 0 ? ret : undefined;
   }
 
   lookup(prop: string): ValueState | undefined {
@@ -214,9 +240,18 @@ class ScopeHandler implements ProxyHandler<any> {
   }
 
   private reflect(value: ValueState) {
-    if (value.t === 'attribute') {
-      // value.k ??= makeHyphenName(prop.substring(ATTR_VALUE_PREFIX.length));
-      value.k && this.scope.setAttr(value.k, value.v);
+    // if (value.t === 'attribute') {
+    //   // value.k ??= makeHyphenName(prop.substring(ATTR_VALUE_PREFIX.length));
+    //   value.k && this.scope.setAttr(value.k, value.v);
+    // }
+    switch (value.t) {
+      case 'attribute':
+        value.k && this.scope.setAttr(value.k, value.v);
+        break;
+      case 'text':
+        const t = value.k && this.scope.textMap?.get(value.k);
+        t ? t.nodeValue = `${value.v != null ? value.v : ''}` : null;
+        break;
     }
   }
 

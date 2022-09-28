@@ -36,6 +36,7 @@ export interface DomElement extends DomNode {
   firstChild: DomNode | undefined;
   firstElementChild: DomElement | undefined;
   previousElementSibling: DomElement | undefined;
+  nextElementSibling: DomElement | undefined;
   appendChild: (n: DomNode) => void;
   insertBefore: (n: DomNode, ref: DomNode | null) => void;
   removeChild: (n: DomNode) => void;

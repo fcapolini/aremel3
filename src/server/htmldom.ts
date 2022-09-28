@@ -156,6 +156,20 @@ export class HtmlElement extends HtmlNode implements DomElement {
     return undefined;
   }
 
+  get nextElementSibling(): HtmlElement | undefined {
+    const parent = this.parentElement as HtmlElement;
+    if (parent) {
+      var i = parent.children.indexOf(this);
+      while (++i < parent.children.length) {
+        var sibling = parent.children[i];
+        if (sibling.nodeType === ELEMENT_NODE) {
+          return sibling as HtmlElement;
+        }
+      }
+    }
+    return undefined;
+  }
+
   addChild(child: DomNode, before?: DomNode) {
     //TODO: as per specs we should make sure `child` gets unlinked
     // https://developer.mozilla.org/en-US/docs/Web/API/Node/appendChild
