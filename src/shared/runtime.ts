@@ -1,13 +1,14 @@
 import { COMMENT_NODE, DomDocument, DomElement, DomTextNode, ELEMENT_NODE, TEXT_NODE } from "./dom";
 import * as lang from "../server/lang";
-import { makeHyphenName } from "./util";
 
 export const NOTNULL_FN = lang.RESERVED_PREFIX + 'nn';
 export const ATTR_VALUE_PREFIX = 'attr_';
-export const CLASS_VALUE_PREFIX = 'class_';
-export const STYLE_VALUE_PREFIX = 'style_';
-export const ON_VALUE_PREFIX = 'on_';
-export const EVENT_VALUE_PREFIX = 'event_';
+//TODO:
+// export const CLASS_VALUE_PREFIX = 'class_';
+// export const STYLE_VALUE_PREFIX = 'style_';
+// export const ON_VALUE_PREFIX = 'on_';
+// export const EVENT_VALUE_PREFIX = 'event_';
+// export const DATA_VALUE = 'data';
 
 export interface AppState {
   root: ScopeState
@@ -26,7 +27,7 @@ export interface ValueState {
   fn?: () => any
   pos?: ValuePos
   cycle?: number
-  t?: 'attribute' | 'class' | 'style' | 'text'
+  t?: 'attribute' | 'text' //TODO: | 'class' | 'style'
   k?: string
   v?: any
   upstream?: Set<ValueState>
@@ -170,7 +171,6 @@ export class Scope {
 // Scope
 // =============================================================================
 
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy
 class ScopeHandler implements ProxyHandler<any> {
   app: App;
   scope: Scope;
@@ -188,7 +188,6 @@ class ScopeHandler implements ProxyHandler<any> {
 
   set(target: any, prop: string, val: any, receiver?: any) {
     const value = this.scope.lookup(prop);
-    // value && (value.v = val);
 
     if (value) {
       const old = value.v;
@@ -240,16 +239,13 @@ class ScopeHandler implements ProxyHandler<any> {
   }
 
   private reflect(value: ValueState) {
-    // if (value.t === 'attribute') {
-    //   // value.k ??= makeHyphenName(prop.substring(ATTR_VALUE_PREFIX.length));
-    //   value.k && this.scope.setAttr(value.k, value.v);
-    // }
     switch (value.t) {
       case 'attribute':
         value.k && this.scope.setAttr(value.k, value.v);
         break;
       case 'text':
         const t = value.k && this.scope.textMap?.get(value.k);
+        //TODO: HTML encoding/decoding?
         t ? t.nodeValue = `${value.v != null ? value.v : ''}` : null;
         break;
     }
