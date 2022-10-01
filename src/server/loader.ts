@@ -88,6 +88,10 @@ function loadNodeProps(
 }
 
 function loadNodeAttributes(node: lang.Node, dom: HtmlElement) {
+  //FIXME
+  // dom.attributes.forEach((attr, key) => {
+  // });
+
   dom.getAttributeNames().slice().forEach(key => {
     const val = dom.getAttribute(key) ?? '';
     if (lang.isPropertyId(key)) {

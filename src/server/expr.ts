@@ -13,7 +13,7 @@ export interface Expr {
 export function isDynamic(s: any) {
   let i;
 	return (
-    s && typeof s === 'string' &&
+    s != null && typeof s === 'string' &&
     (i = s.indexOf(lang.EXPR_MARKER1)) >= 0 &&
     s.indexOf(lang.EXPR_MARKER2) > i
   );
