@@ -105,6 +105,7 @@ export default class Preprocessor {
     return fname;
   }
 
+  //TODO: optimaze case of repeated calls with growing position, for the compiler
   getSourcePos(htmlPos?: HtmlPos): SourcePos | undefined {
     var ret: SourcePos | undefined;
     if (htmlPos) {

@@ -60,12 +60,6 @@ export function isPropertyId(key: string): boolean {
   return key.includes(':');
 }
 
-export function containsExpression(text: string): boolean {
-  const i1 = text.indexOf('[[');
-  const i2 = text.indexOf(']]');
-  return (i1 >= 0 && i2 > i1);
-}
-
 export function isValidId(id: string): boolean {
   return /^(\w+)$/.test(id) && !id.startsWith(RESERVED_PREFIX); //TODO: improve check
 }
