@@ -1,4 +1,4 @@
-import { HtmlDocument, HtmlElement } from "../../src/server/htmldom";
+import { HtmlAttribute, HtmlDocument, HtmlElement } from "../../src/server/htmldom";
 import { ELEMENT_NODE, TEXT_NODE } from "../../src/shared/dom";
 import Preprocessor, { domGetTop, PreprocessorError } from "../../src/server/preprocessor";
 import { EReg, normalizeText } from "../../src/shared/util";
@@ -250,6 +250,33 @@ describe("preprocessor", () => {
     assert.equal(normalizeText(doc?.toString()), normalizeText(
       `<html><head></head><body>Dummy</body></html>`
     ));
+  });
+
+  // =========================================================================
+  // source position
+  // =========================================================================
+
+  it("source position 1", async () => {
+    var prepro = new Preprocessor(preprocessor.rootPath, [{
+      fname: 'dummy.html',
+      content: 
+        '<!DOCTYPE html>\n' +
+        '<html :v=[[\n' +
+        "' * 2 ]]>\n" +
+        '<head></head>\n' +
+        '<body></body>\n' +
+        '</html>\n'
+    }]);
+    const doc = await prepro.read('dummy.html') as HtmlDocument;
+    const root = doc.firstElementChild as HtmlElement;
+    assert.equal(root.tagName, 'HTML');
+    const attr = root.attributes.get(':v') as HtmlAttribute;
+    assert.exists(attr);
+    const sourcePos = prepro.getSourcePos(attr.pos2);
+    assert.equal(sourcePos?.line1, 2);
+    assert.equal(sourcePos?.column1, 12);
+    assert.equal(sourcePos?.line2, 3);
+    assert.equal(sourcePos?.column2, 7);
   });
 
 });

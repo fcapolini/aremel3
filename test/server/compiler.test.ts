@@ -13,18 +13,42 @@ const preprocessor = new Preprocessor(process.cwd() + '/test/server/compiler');
 describe("compiler", () => {
 
   it(`base app`, async () => {
-    const doc = await preprocessor.reset().read('base-app.html');
+    var prepro = new Preprocessor(preprocessor.rootPath, [{
+      fname: 'dummy.html',
+      content: 
+        '<!DOCTYPE html>\n' +
+        '<html>\n' +
+        '<head></head>\n' +
+        '<body></body>\n' +
+        '</html>\n'
+    }]);
+    const doc = await prepro.read('dummy.html') as HtmlDocument;
     const langApp = load(doc as HtmlDocument, preprocessor);
     // const appStateSrc = compileApp(langApp);
     // const appState = eval(appStateSrc);
     //TODO
   });
 
-  it(`root value`, async () => {
-    const doc = await preprocessor.reset().read('root-value.html');
-    const app = load(doc as HtmlDocument, preprocessor);
-    // const appState = compileApp(app);
-    //TODO
+  it(`value parsing error`, async () => {
+    var prepro = new Preprocessor(preprocessor.rootPath, [{
+      fname: 'dummy.html',
+      content: 
+        '<!DOCTYPE html>\n' +
+        '<html :v=[[\n' +
+        "' * 2 ]]>\n" +
+        '<head></head>\n' +
+        '<body></body>\n' +
+        '</html>\n'
+    }]);
+    const doc = await prepro.read('dummy.html') as HtmlDocument;
+    const app = load(doc as HtmlDocument, prepro);
+    const ast = compileApp(app);
+    assert.equal(app.errors.length, 1);
+    assert.deepEqual(app.errors[0], {
+      type: 'err',
+      msg: 'expression parsing: Unexpected token ILLEGAL',
+      pos: { fname: '/dummy.html', line1: 3, line2: 3, column1: 1, column2: 1 }
+    })
   });
 
 });

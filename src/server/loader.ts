@@ -1,5 +1,5 @@
 import { DomNode, ELEMENT_NODE } from "../shared/dom";
-import { HtmlDocument, HtmlElement, HtmlText } from "./htmldom";
+import { HtmlAttribute, HtmlDocument, HtmlElement, HtmlText } from "./htmldom";
 import * as expr from "./expr";
 import * as lang from "./lang";
 import Preprocessor from "./preprocessor";
@@ -68,7 +68,7 @@ function loadNodeProps(
       node.aka = lang.defaultAka(dom);
     }
 
-    loadNodeAttributes(node, dom);
+    loadNodeAttributes(node, dom, pre);
 
     dom.childNodes.forEach(n => {
       if (n.nodeType === ELEMENT_NODE) {
@@ -78,7 +78,7 @@ function loadNodeProps(
           roots.push(n as HtmlElement);
         }
       } else {
-        loadNodeTexts(node, n as HtmlText);
+        loadNodeTexts(node, n as HtmlText, pre);
       }
     });
   }
@@ -87,31 +87,44 @@ function loadNodeProps(
   return roots;
 }
 
-function loadNodeAttributes(node: lang.Node, dom: HtmlElement) {
+function loadNodeAttributes(node: lang.Node, dom: HtmlElement, pre: Preprocessor) {
   //FIXME
   // dom.attributes.forEach((attr, key) => {
   // });
 
   dom.getAttributeNames().slice().forEach(key => {
-    const val = dom.getAttribute(key) ?? '';
+    const attr = dom.attributes.get(key) as HtmlAttribute;
+    const val = attr.value != null ? attr.value : '';
     if (lang.isPropertyId(key)) {
       if (dom.attributes.get(key)?.quote === lang.EXPR_ATTR_QUOTE) {
-        node.props.set(key, { val: `${lang.EXPR_MARKER1}${val}${lang.EXPR_MARKER2}` });
+        node.props.set(key, {
+          val: `${lang.EXPR_MARKER1}${val}${lang.EXPR_MARKER2}`,
+          pos: pre.getSourcePos(attr.pos2),
+        });
       } else {
-        node.props.set(key, { val: val });
+        node.props.set(key, {
+          val: val,
+          pos: pre.getSourcePos(attr.pos2),
+        });
       }
       dom.removeAttribute(key);
     } else if (dom.attributes.get(key)?.quote === lang.EXPR_ATTR_QUOTE) {
-      node.props.set(key, { val: `${lang.EXPR_MARKER1}${val}${lang.EXPR_MARKER2}` });
+      node.props.set(key, {
+        val: `${lang.EXPR_MARKER1}${val}${lang.EXPR_MARKER2}`,
+        pos: pre.getSourcePos(attr.pos2),
+      });
       dom.setAttribute(key, '', '"');
     } else if (expr.isDynamic(val)) {
-      node.props.set(key, { val: val });
+      node.props.set(key, {
+        val: val,
+        pos: pre.getSourcePos(attr.pos2),
+      });
       dom.setAttribute(key, '');
     }
   });
 }
 
-function loadNodeTexts(node: lang.Node, dom: HtmlText) {
+function loadNodeTexts(node: lang.Node, dom: HtmlText, pre: Preprocessor) {
   const text = dom.nodeValue;
 
   if (expr.isDynamic(text)) {
@@ -132,7 +145,8 @@ function loadNodeTexts(node: lang.Node, dom: HtmlText) {
         const expr = text.substring(i1, i2).trim();
         if (expr.length > 0) {
           node.props.set(`${lang.TEXT_ID_PREFIX}${id}`, {
-            val: `${lang.EXPR_MARKER1}${expr}${lang.EXPR_MARKER2}`
+            val: `${lang.EXPR_MARKER1}${expr}${lang.EXPR_MARKER2}`,
+            pos: pre.getSourcePos(dom.pos),
           });
         }
         n = dom.ownerDocument?.createComment(`${lang.TEXT_COMMENT2}${id}`)

@@ -114,7 +114,7 @@ export default class Preprocessor {
         ret = { fname: fname, line1: 1, column1: 1, line2: 1, column2: 1 };
         var src = this.sources[htmlPos.origin], i = 0, j;
         while ((j = src.indexOf('\n', i)) >= 0) {
-          if (j > htmlPos.i1) {
+          if (j >= htmlPos.i1) {
             ret.column1 = Math.max(0, (htmlPos.i1 - i) + 1);
             break;
           }

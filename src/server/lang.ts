@@ -34,6 +34,7 @@ export interface Node {
 export interface Prop {
   textNode?: HtmlText
   val: string
+  pos?: SourcePos
 }
 
 export interface Error {
