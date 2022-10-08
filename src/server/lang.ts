@@ -16,8 +16,8 @@ export const TEXT_COMMENT2 = '-/';
 export const RESERVED_PREFIX = '__';
 
 export interface App {
-  doc: HtmlDocument
   pre: Preprocessor
+  doc?: HtmlDocument
   root?: Node
   errors: Error[]
 }
@@ -40,6 +40,7 @@ export interface Prop {
 export interface Error {
   type: 'err' | 'warn'
   msg: string
+  fname?: string
   pos?: SourcePos
 }
 

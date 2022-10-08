@@ -3,21 +3,37 @@ import { HtmlAttribute, HtmlDocument, HtmlElement, HtmlText } from "./htmldom";
 import * as expr from "./expr";
 import * as lang from "./lang";
 import Preprocessor from "./preprocessor";
+import { HtmlException } from "./htmlparser";
 
 interface Context {
   nextId: number
 }
 
-export function load(doc: HtmlDocument, pre: Preprocessor): lang.App {
+export async function load(fname: string, pre: Preprocessor): Promise<lang.App> {
   const ctx: Context = { nextId: 0 };
-  const ret: lang.App = { doc: doc, pre: pre, errors: [] };
+  const ret: lang.App = { pre: pre, errors: [] };
   
-  if (doc.firstElementChild) {
-    ret.root = loadNode(doc.firstElementChild as HtmlElement, pre, ret.errors, ctx);
+  try {
+    pre.reset();
+    ret.doc = await pre.read(fname);
+  } catch (ex) {
+    if (ex instanceof HtmlException) {
+      ret.errors.push({
+        type: 'err',
+        msg: `${ex.msg} in ${ex.fname} at [${ex.row}, ${ex.col}]`,
+        fname: ex.fname,
+        pos: pre.getSourcePos({ origin: 0, i1: 0, i2: 0 })
+      });
+    }
+  }
+
+  if (ret.doc?.firstElementChild) {
+    ret.root = loadNode(ret.doc.firstElementChild as HtmlElement, pre, ret.errors, ctx);
   } else {
     ret.errors.push({
       type: 'err',
       msg: 'missing root element',
+      fname: fname,
       pos: pre.getSourcePos({ origin: 0, i1: 0, i2: 0 })
     });
   }

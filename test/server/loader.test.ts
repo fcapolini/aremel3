@@ -11,9 +11,7 @@ const preprocessor = new Preprocessor(process.cwd() + '/test/server/loader');
 describe("loader", () => {
 
   it(`000 empy page`, async () => {
-    const doc = await preprocessor.reset().read('loader000.html');
-    assert.exists(doc);
-    const app = load(doc as HtmlDocument, preprocessor);
+    const app = await load('loader000.html', preprocessor);
     assert.exists(app);
     assert.equal(app.errors.length, 1);
     assert.equal(app.errors[0].type, 'err');
@@ -21,8 +19,7 @@ describe("loader", () => {
   });
 
   it(`001 html tag only`, async () => {
-    const doc = await preprocessor.reset().read('loader001.html');
-    const app = load(doc as HtmlDocument, preprocessor);
+    const app = await load('loader001.html', preprocessor);
     assert.exists(app);
     assert.equal(app.errors.length, 0);
     assert.exists(app.root);
@@ -32,23 +29,20 @@ describe("loader", () => {
   });
 
   it(`002 html tag only w/ valid :aka attribute`, async () => {
-    const doc = await preprocessor.reset().read('loader002.html');
-    const app = load(doc as HtmlDocument, preprocessor);
+    const app = await load('loader002.html', preprocessor);
     assert.equal(app.root?.aka, 'app');
-    assert.equal(doc?.toString(), '<html data-aremel="0"><head data-aremel="1"></head><body data-aremel="2"></body></html>\n');
+    assert.equal(app.doc?.toString(), '<html data-aremel="0"><head data-aremel="1"></head><body data-aremel="2"></body></html>\n');
   });
 
   it(`003 html tag only w/ invalid :aka attribute`, async () => {
-    const doc = await preprocessor.reset().read('loader003.html');
-    const src = load(doc as HtmlDocument, preprocessor);
+    const src = await load('loader003.html', preprocessor);
     assert.equal(src.errors.length, 1);
     assert.equal(src.errors[0].type, 'err');
     assert.equal(src.errors[0].msg, 'invalid name "a-pp"');
   });
 
   it(`004 body w/ valid :aka attribute`, async () => {
-    const doc = await preprocessor.reset().read('loader004.html');
-    const app = load(doc as HtmlDocument, preprocessor);
+    const app = await load('loader004.html', preprocessor);
     assert.equal(app.root?.dom.tagName, 'HTML');
     assert.equal(app.root?.aka, 'page');
     assert.equal(app.root?.children.length, 2);
@@ -58,7 +52,7 @@ describe("loader", () => {
     assert.equal(app.root?.children[1].aka, 'main');
     assert.equal(nodeCount(app), 3);
     assert.equal(
-      normalizeText(doc?.toString()),
+      normalizeText(app.doc?.toString()),
       normalizeText(`<html data-aremel="0">
         <head data-aremel="1"></head>
         <body data-aremel="2"></body>
@@ -68,8 +62,7 @@ describe("loader", () => {
   });
 
   it(`005 body w/ invalid :aka attribute`, async () => {
-    const doc = await preprocessor.reset().read('loader005.html');
-    const app = load(doc as HtmlDocument, preprocessor);
+    const app = await load('loader005.html', preprocessor);
     assert.equal(app.errors.length, 1);
     assert.equal(app.errors[0].type, 'err');
     assert.equal(app.errors[0].msg, 'invalid name "ma-in"');
@@ -79,12 +72,11 @@ describe("loader", () => {
   });
 
   it(`100 html w/ logic value`, async () => {
-    const doc = await preprocessor.reset().read('loader100.html');
-    const app = load(doc as HtmlDocument, preprocessor);
+    const app = await load('loader100.html', preprocessor);
     assert.equal(app.root?.props.size, 1);
     assert.equal(app.root?.props.get(':v')?.val, 'en');
     assert.equal(
-      normalizeText(doc?.toString()),
+      normalizeText(app.doc?.toString()),
       normalizeText(`<html data-aremel="0">
         <head data-aremel="1"></head>
         <body data-aremel="2"></body>
@@ -94,8 +86,7 @@ describe("loader", () => {
   });
 
   it(`101 html w/ logic value and attribute expression`, async () => {
-    const doc = await preprocessor.reset().read('loader101.html');
-    const app = load(doc as HtmlDocument, preprocessor);
+    const app = await load('loader101.html', preprocessor);
     assert.equal(app.root?.props.size, 3);
     assert.equal(app.root?.props.get(':v')?.val, 'en');
     assert.equal(app.root?.props.get(':x')?.val, '[[1]]');
@@ -106,7 +97,7 @@ describe("loader", () => {
     assert.equal(body?.props.size, 1);
     assert.equal(body?.props.get(`${l.TEXT_ID_PREFIX}0`)?.val, '[[v]]');
     assert.equal(
-      normalizeText(doc?.toString(true)),
+      normalizeText(app.doc?.toString(true)),
       normalizeText(`<html class="all" data-aremel="0" lang="">
         <head data-aremel="1"></head>
         <body data-aremel="2"><!--${l.TEXT_COMMENT1}0--><!--${l.TEXT_COMMENT2}0--></body>
@@ -116,8 +107,7 @@ describe("loader", () => {
   });
 
   it(`102 html w/ logic value and attribute expression`, async () => {
-    const doc = await preprocessor.reset().read('loader102.html');
-    const app = load(doc as HtmlDocument, preprocessor);
+    const app = await load('loader102.html', preprocessor);
     assert.equal(app.root?.props.size, 3);
     assert.equal(app.root?.props.get(':v')?.val, 'en');
     assert.equal(app.root?.props.get(':x')?.val, '[[1]]');
@@ -128,7 +118,7 @@ describe("loader", () => {
     assert.equal(body?.props.size, 1);
     assert.equal(body?.props.get(`${l.TEXT_ID_PREFIX}0`)?.val, '[[v]]');
     assert.equal(
-      normalizeText(doc?.toString(true)),
+      normalizeText(app.doc?.toString(true)),
       normalizeText(`<html class="all" data-aremel="0" lang="">
         <head data-aremel="1"></head>
         <body data-aremel="2">value: <!--${l.TEXT_COMMENT1}0--><!--${l.TEXT_COMMENT2}0-->...</body>
