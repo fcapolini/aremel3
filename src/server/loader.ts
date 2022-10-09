@@ -2,7 +2,7 @@ import { DomNode, ELEMENT_NODE } from "../shared/dom";
 import { HtmlAttribute, HtmlDocument, HtmlElement, HtmlText } from "./htmldom";
 import * as expr from "./expr";
 import * as lang from "./lang";
-import Preprocessor from "./preprocessor";
+import Preprocessor, { SourcePos } from "./preprocessor";
 import { HtmlException } from "./htmlparser";
 
 interface Context {
@@ -16,26 +16,31 @@ export async function load(fname: string, pre: Preprocessor): Promise<lang.App> 
   try {
     pre.reset();
     ret.doc = await pre.read(fname);
-  } catch (ex) {
-    if (ex instanceof HtmlException) {
+
+    if (ret.doc?.firstElementChild) {
+      ret.root = loadNode(ret.doc.firstElementChild as HtmlElement, pre, ret.errors, ctx);
+    } else {
       ret.errors.push({
         type: 'err',
-        msg: `${ex.msg} in ${ex.fname} at [${ex.row}, ${ex.col}]`,
-        fname: ex.fname,
+        msg: 'missing root element',
         pos: pre.getSourcePos({ origin: 0, i1: 0, i2: 0 })
       });
     }
-  }
-
-  if (ret.doc?.firstElementChild) {
-    ret.root = loadNode(ret.doc.firstElementChild as HtmlElement, pre, ret.errors, ctx);
-  } else {
-    ret.errors.push({
-      type: 'err',
-      msg: 'missing root element',
-      fname: fname,
-      pos: pre.getSourcePos({ origin: 0, i1: 0, i2: 0 })
-    });
+  
+  } catch (ex: any) {
+    if (ex.msg && ex.fname) {
+      ret.errors.push({
+        type: 'err',
+        msg: ex.msg,
+        pos: {
+          fname: ex.fname,
+          line1: ex.row,
+          line2: ex.row,
+          column1: ex.col,
+          column2: ex.col,
+        }
+      });
+    }
   }
 
   return ret;

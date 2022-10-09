@@ -40,7 +40,6 @@ export interface Prop {
 export interface Error {
   type: 'err' | 'warn'
   msg: string
-  fname?: string
   pos?: SourcePos
 }
 
