@@ -2,6 +2,7 @@ import { generate } from "escodegen";
 import { parseScript } from "esprima";
 import * as es from "estree";
 import * as rt from "../shared/runtime";
+import * as code from "./code";
 import * as expr from "./expr";
 import * as lang from "./lang";
 import * as pre from "./preprocessor";
@@ -24,6 +25,43 @@ interface Context {
   } else {
     return null;
   }
+}
+
+function addError(type: 'err' | 'warn', cat: string, ex: any, app: lang.App, startPos?: pre.SourcePos) {
+  let error: lang.Error;
+  if (ex.lineNumber && ex.column && ex.description && startPos) {
+    const ln = ex.lineNumber + startPos.line1 - 1;
+    const col = ex.column + (ex.lineNumber < 2 ? startPos.column1 - 1 : 0);
+    error = {
+      type: type,
+      msg: `${cat}: ${ex.description}`,
+      pos: {
+        fname: startPos.fname,
+        line1: ln,
+        line2: ln,
+        column1: col,
+        column2: col
+      }
+    }
+  } else {
+    error = {
+      type: type,
+      msg: `${cat} error: ${ex.description}`
+    }
+  }
+  app.errors.push(error);
+}
+
+function makeProperty(name: string, value: es.Expression | es.Literal): es.Property {
+  return {
+    type: "Property",
+    kind: "init",
+    computed: false,
+    shorthand: false,
+    method: false,
+    key: { type: "Identifier", name: name },
+    value: value
+  };
 }
 
 /**
@@ -73,14 +111,16 @@ function compileValues(node: lang.Node, app: lang.App): es.ObjectExpression {
 /**
  * @see rt.ValueState
  */
- function compileValue(key: string, prop: lang.Prop, node: lang.Node, app: lang.App): es.ObjectExpression {
+function compileValue(
+  key: string, prop: lang.Prop, node: lang.Node, app: lang.App
+): es.ObjectExpression {
   const p: es.Property[] = [];
 
   if (expr.isDynamic(prop.val)) {
-    const fn = compileExpression(key, prop, node, app);
-    //TODO
+    const e = compileExpression(key, prop, node, app);
+    e && p.push(makeProperty('fn', e));
   } else {
-    //TODO
+    p.push(makeProperty('v', { type: 'Literal', value: prop.val }));
   }
 
   return {
@@ -89,65 +129,24 @@ function compileValues(node: lang.Node, app: lang.App): es.ObjectExpression {
   };
 }
 
-function compileExpression(key: string, prop: lang.Prop, node: lang.Node, app: lang.App): string {
-  let ast;
-  let ret = '';
+function compileExpression(
+  key: string, prop: lang.Prop, node: lang.Node, app: lang.App
+): es.FunctionExpression | undefined {
+  let ast: es.Program | undefined;
 
-  //TODO: parseScript errors handling
+
   try {
     if (prop.pos) {
-      const exp = expr.parseExpr(`${prop.val}`, prop.pos.fname, prop.pos.line1);
+      const exp = expr.parseExpr(prop.val, prop.pos.fname, prop.pos.line1);
       ast = parseScript(exp.src, { loc: true });
     } else {
-      const exp = expr.parseExpr(`${prop.val}`);
+      const exp = expr.parseExpr(prop.val);
       ast = parseScript(exp.src);
     }
   } catch (ex: any) {
     addError('err', 'expression parsing', ex, app, prop.pos);
   }
 
-  try {
-    ret = ast ? generate(ast) : '';
-  } catch (ex: any) {
-    addError('err', 'expression generation', ex, app, prop.pos);
-  }
-
+  const ret = ast ? code.makeFunction(ast) : undefined;
   return ret;
-}
-
-function addError(type: 'err' | 'warn', cat: string, ex: any, app: lang.App, startPos?: pre.SourcePos) {
-  let error: lang.Error;
-  if (ex.lineNumber && ex.column && ex.description && startPos) {
-    const ln = ex.lineNumber + startPos.line1 - 1;
-    const col = ex.column + (ex.lineNumber < 2 ? startPos.column1 - 1 : 0);
-    error = {
-      type: type,
-      msg: `${cat}: ${ex.description}`,
-      pos: {
-        fname: startPos.fname,
-        line1: ln,
-        line2: ln,
-        column1: col,
-        column2: col
-      }
-    }
-  } else {
-    error = {
-      type: type,
-      msg: `${cat} error: ${ex.description}`
-    }
-  }
-  app.errors.push(error);
-}
-
-function makeProperty(name: string, value: es.Expression | es.Literal): es.Property {
-  return {
-    type: "Property",
-    kind: "init",
-    computed: false,
-    shorthand: false,
-    method: false,
-    key: { type: "Identifier", name: name },
-    value: value
-  };
 }
