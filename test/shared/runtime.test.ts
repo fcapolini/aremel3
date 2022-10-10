@@ -164,7 +164,21 @@ describe("runtime", () => {
   });
 
   it(`explicit dependency`, () => {
-    //TODO
+    //TODO: because app.refresh() pulls dependencies this doesn't actually
+    //test the explicit dependency yet
+    const doc = baseDoc();
+    const state = baseState();
+    state.root.values['v'] = { fn: function() { return 1; } };
+    state.root.values['x'] = { fn: function() {
+      /* @ts-ignore */ return this.v + 1;
+    }, refs: ['v'] };
+    const app = new rt.App(doc, state);
+    app.refresh();
+    assert.equal(app.root.obj.v, 1);
+    assert.equal(app.root.obj.x, 2);
+    app.root.obj.v = 2;
+    assert.equal(app.root.state.values['v'].v, 2);
+    assert.equal(app.root.state.values['x'].v, 3);
   });
 
 });

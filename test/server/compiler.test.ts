@@ -223,4 +223,117 @@ describe("compiler", () => {
     }`));
   });
 
+  it(`root dependent value`, async () => {
+    var pre = new Preprocessor(ROOTPATH, [{
+      fname: 'index.html',
+      content: `<html :x=[[y + 1]] :y=[[0]]></html>`
+    }]);
+    const app = await load('index.html', pre);
+    const ast = compileApp(app);
+    const src = generate(ast);
+    assert.equal(normalizeSpace(src), normalizeSpace(`{
+      root: {
+        id: 0, aka: 'page', values: {
+          x: { fn: function () { return this.y + 1; }, refs: ['y'] },
+          y: { fn: function () { return 0; } }
+        }, children: [
+          { id: 1, aka: 'head', values: {} },
+          { id: 2, aka: 'body', values: {} }
+        ]
+      }
+    }`));
+  });
+
+  it(`root static attribute value`, async () => {
+    var pre = new Preprocessor(ROOTPATH, [{
+      fname: 'index.html',
+      content: `<html lang="en"></html>`
+    }]);
+    const app = await load('index.html', pre);
+    const ast = compileApp(app);
+    const src = generate(ast);
+    assert.equal(normalizeSpace(src), normalizeSpace(`{
+      root: {
+        id: 0, aka: 'page', values: {}, children: [
+          { id: 1, aka: 'head', values: {} },
+          { id: 2, aka: 'body', values: {} }
+        ]
+      }
+    }`));
+  });
+
+  it(`root dynamic attribute value`, async () => {
+    var pre = new Preprocessor(ROOTPATH, [{
+      fname: 'index.html',
+      content: `<html lang=[['en']]></html>`
+    }]);
+    const app = await load('index.html', pre);
+    const ast = compileApp(app);
+    const src = generate(ast);
+    assert.equal(normalizeSpace(src), normalizeSpace(`{
+      root: {
+        id: 0, aka: 'page', values: {
+          attr_lang: { fn: function () { return 'en'; } }
+        }, children: [
+          { id: 1, aka: 'head', values: {} },
+          { id: 2, aka: 'body', values: {} }
+        ]
+      }
+    }`));
+  });
+
+  it(`static text value`, async () => {
+    var pre = new Preprocessor(ROOTPATH, [{
+      fname: 'index.html',
+      content: `<html><body>hi there!</body></html>`
+    }]);
+    const app = await load('index.html', pre);
+    assert.equal(
+      normalizeSpace(app.doc?.toString()),
+      normalizeSpace(`<html data-aremel="0">` +
+        `<head data-aremel="1"></head>` +
+        `<body data-aremel="2">hi there!</body>` +
+      `</html>`)
+    );
+    const ast = compileApp(app);
+    const src = generate(ast);
+    assert.equal(normalizeSpace(src), normalizeSpace(`{
+      root: {
+        id: 0, aka: 'page', values: {}, children: [
+          { id: 1, aka: 'head', values: {} },
+          { id: 2, aka: 'body', values: {} }
+        ]
+      }
+    }`));
+  });
+
+  it(`dynamic text value`, async () => {
+    var pre = new Preprocessor(ROOTPATH, [{
+      fname: 'index.html',
+      content: `<html>
+        <body>hi [['there']]!</body>
+      </html>`
+    }]);
+    const app = await load('index.html', pre);
+    assert.equal(
+      normalizeSpace(app.doc?.toString()),
+      normalizeSpace(`<html data-aremel="0">
+        <head data-aremel="1"></head>` +
+        `<body data-aremel="2">hi <!---:0--><!---/0-->!</body>
+      </html>`)
+    );
+    const ast = compileApp(app);
+    const src = generate(ast);
+    assert.equal(normalizeSpace(src), normalizeSpace(`{
+      root: {
+        id: 0, aka: 'page', values: {}, children: [
+          { id: 1, aka: 'head', values: {} },
+          { id: 2, aka: 'body', values: {
+            __t$0: { fn: function () { return 'there'; } }
+          } }
+        ]
+      }
+    }`));
+  });
+
 });

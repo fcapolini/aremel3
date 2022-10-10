@@ -68,7 +68,7 @@ function qualifyIdentifiers(body: es.BlockStatement, references: Set<string>) {
   const stack: es.Node[] = [];
   const ret = estraverse.replace(body, {
     enter: (node, parent) => {
-      console.log(`${'  '.repeat(stack.length)}${node.type} {`);
+      // console.log(`${'  '.repeat(stack.length)}${node.type} {`);
       const parentParent = (stack.length > 1 ? stack[stack.length - 2] : null);
       stack.push(node);
 
@@ -124,7 +124,7 @@ function qualifyIdentifiers(body: es.BlockStatement, references: Set<string>) {
 
     leave: (node, parent) => {
       stack.pop();
-      console.log(`${'  '.repeat(stack.length)}}`);
+      // console.log(`${'  '.repeat(stack.length)}}`);
 
       if (node.type === 'BlockStatement') {
         leaveScope();
