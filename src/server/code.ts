@@ -3,15 +3,15 @@ import estraverse from "estraverse";
 
 const GLOBALS = new Set(['console']);
 
-export function makeFunction(script: es.Program): es.FunctionExpression {
+export function makeFunction(script: es.Program, references: Set<string>): es.FunctionExpression {
   return {
     type: 'FunctionExpression',
     params: [],
-    body: makeFunctionBody(script.body as es.Statement[])
+    body: makeFunctionBody(script.body as es.Statement[], references)
   }
 }
 
-function makeFunctionBody(statements: es.Statement[]): es.BlockStatement {
+function makeFunctionBody(statements: es.Statement[], references: Set<string>): es.BlockStatement {
   const len = statements.length;
   for (let i = 0; i < len; i++) {
     const node: any = statements[i];
@@ -29,11 +29,11 @@ function makeFunctionBody(statements: es.Statement[]): es.BlockStatement {
     type: 'BlockStatement',
     body: statements
   }
-  qualifyIdentifiers(ret);
+  qualifyIdentifiers(ret, references);
   return ret;
 }
 
-function qualifyIdentifiers(body: es.BlockStatement) {
+function qualifyIdentifiers(body: es.BlockStatement, references: Set<string>) {
   const scopes: Array<{ isFunction: boolean, ids: Set<string> }> = [];
 
   function enterScope(isFunction: boolean) {
@@ -73,10 +73,11 @@ function qualifyIdentifiers(body: es.BlockStatement) {
       stack.push(node);
 
       if (node.type === 'Identifier') {
-        if (GLOBALS.has(node.name)) {
-          return;
-        }
-        if (parent?.type === 'MemberExpression' && node === parent.property) {
+        if (
+          GLOBALS.has(node.name) ||
+          (parent?.type === 'MemberExpression' && node === parent.property) ||
+          isLocalId(node.name)
+        ) {
           return;
         }
         if (parent?.type === 'VariableDeclarator') {
@@ -87,9 +88,7 @@ function qualifyIdentifiers(body: es.BlockStatement) {
           addLocalId(node.name, isVar);
           return;
         }
-        if (isLocalId(node.name)) {
-          return;
-        }
+        references.add(node.name);
         return {
           type: 'MemberExpression',
           computed: false,
@@ -98,7 +97,7 @@ function qualifyIdentifiers(body: es.BlockStatement) {
           property: node
         }
       } else if (node.type === 'BlockStatement') {
-        enterScope(stack.length < 2);
+        enterScope(stack.length === 1);
       } else if (
         node.type === 'WhileStatement' ||
         node.type === 'DoWhileStatement' ||
@@ -139,6 +138,7 @@ function qualifyIdentifiers(body: es.BlockStatement) {
         leaveScope();
       } else if (
         node.type === 'FunctionDeclaration'
+        //TODO: FunctionExpression | ArrowFunctionExpression
       ) {
         leaveScope();
       }
