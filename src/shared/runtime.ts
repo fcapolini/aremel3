@@ -30,6 +30,7 @@ export interface ValueState {
   t?: 'attribute' | 'text' //TODO: | 'class' | 'style'
   k?: string
   v?: any
+  refs?: string[]
   upstream?: Set<ValueState>
   downstream?: Set<ValueState>
 }

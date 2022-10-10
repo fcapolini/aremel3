@@ -117,8 +117,17 @@ function compileValue(
   const p: es.Property[] = [];
 
   if (expr.isDynamic(prop.val)) {
-    const e = compileExpression(key, prop, node, app);
+    const refs = new Set<string>();
+    const e = compileExpression(prop, node, app, refs);
     e && p.push(makeProperty('fn', e));
+    if (refs.size > 0) {
+      const a: es.ArrayExpression = {
+        type: 'ArrayExpression',
+        elements: []
+      }
+      refs.forEach(id => a.elements.push({ type: 'Literal', value: id }));
+      p.push(makeProperty('refs', a));
+    }
   } else {
     p.push(makeProperty('v', { type: 'Literal', value: prop.val }));
   }
@@ -130,7 +139,7 @@ function compileValue(
 }
 
 function compileExpression(
-  key: string, prop: lang.Prop, node: lang.Node, app: lang.App
+  prop: lang.Prop, node: lang.Node, app: lang.App, refs: Set<string>
 ): es.FunctionExpression | undefined {
   let ast: es.Program | undefined;
 
@@ -147,6 +156,6 @@ function compileExpression(
     addError('err', 'expression parsing', ex, app, prop.pos);
   }
 
-  const ret = ast ? code.makeFunction(ast) : undefined;
+  const ret = ast ? code.makeFunction(ast, refs) : undefined;
   return ret;
 }

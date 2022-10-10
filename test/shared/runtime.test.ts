@@ -163,4 +163,8 @@ describe("runtime", () => {
     );
   });
 
+  it(`explicit dependency`, () => {
+    //TODO
+  });
+
 });
