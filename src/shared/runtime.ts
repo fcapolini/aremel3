@@ -1,6 +1,8 @@
 import { COMMENT_NODE, DomDocument, DomElement, DomTextNode, ELEMENT_NODE, TEXT_NODE } from "./dom";
 import * as lang from "../server/lang";
 
+const MODE: 'pull' | 'refs' = 'refs';
+
 export const NOTNULL_FN = lang.RESERVED_PREFIX + 'nn';
 export const ATTR_VALUE_PREFIX = 'attr_';
 //TODO:
@@ -63,10 +65,10 @@ export class App {
   refresh(scope?: Scope) {
     this.state.cycle ? this.state.cycle++ : this.state.cycle = 1;
     delete this.pushLevel;
-    this.pullStack = [];
+    MODE === 'pull' && (this.pullStack = []);
     (scope ?? this.root).clear();
     (scope ?? this.root).refresh();
-    delete this.pullStack;
+    MODE === 'pull' && (delete this.pullStack);
     this.pushLevel = 0;
     return this;
   }
@@ -102,7 +104,7 @@ export class Scope {
     this.parent = parent;
     this.children = [];
     this.obj = new Proxy<any>(this.state.values, new ScopeHandler(app, this))
-    this.dom = app.domMap.get(state.id);
+    this.dom = app.domMap.get(`${state.id}`);
     this.textMap = this.getTextMap();
     if (parent) {
       parent.children.push(this);
@@ -111,15 +113,24 @@ export class Scope {
   }
 
   getTextMap() {
+    const that = this;
     const ret = new Map<string, DomTextNode>();
     function f(e: DomElement) {
       e.childNodes.forEach(n => {
         if (n.nodeType === COMMENT_NODE) {
-          let s = (n as DomTextNode).nodeValue;
+          const s = (n as DomTextNode).nodeValue;
           if (s.startsWith(lang.TEXT_COMMENT1)) {
+            const id = s.substring(lang.TEXT_COMMENT1_LEN);
             const t = n.nextSibling;
             if (t?.nodeType === TEXT_NODE) {
-              ret.set(s.substring(lang.TEXT_COMMENT1_LEN), t as DomTextNode);
+              ret.set(id, t as DomTextNode);
+            } else if (t?.nodeType === COMMENT_NODE) {
+              const s = (t as DomTextNode).nodeValue;
+              if (s.startsWith(lang.TEXT_COMMENT2)) {
+                const n = that.app.doc.createTextNode('');
+                e.insertBefore(n, t);
+                ret.set(id, n);
+              }
             }
           }
         } else if (n.nodeType === ELEMENT_NODE) {
@@ -150,6 +161,13 @@ export class Scope {
         value.upstream.forEach(o => o?.downstream?.delete(value));
         delete value.upstream;
       }
+      MODE === 'refs' && value.refs?.forEach(id => {
+        const other = this.lookup(id);
+        if (other) {
+          (value.upstream ?? (value.upstream = new Set())).add(other);
+          (other.downstream ?? (other.downstream = new Set())).add(value);
+        }
+      });
     }
     this.children.forEach(s => s.clear());
   }
@@ -169,7 +187,7 @@ export class Scope {
 }
 
 // =============================================================================
-// Scope
+// ScopeHandler
 // =============================================================================
 
 class ScopeHandler implements ProxyHandler<any> {
@@ -205,7 +223,7 @@ class ScopeHandler implements ProxyHandler<any> {
 
   private update(value: ValueState) {
     if (value) {
-      if (this.app.pullStack) {
+      if (MODE === 'pull' && this.app.pullStack) {
         if (this.app.pullStack.length > 0) {
           const o = this.app.pullStack[this.app.pullStack.length - 1];
           (value.downstream ?? (value.downstream = new Set())).add(o);
@@ -233,7 +251,7 @@ class ScopeHandler implements ProxyHandler<any> {
         }
       }
 
-      if (this.app.pullStack) {
+      if (MODE === 'pull' && this.app.pullStack) {
         this.app.pullStack?.pop();
       }
     }

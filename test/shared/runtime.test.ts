@@ -98,6 +98,7 @@ describe("runtime", () => {
     //
     body.values['attr_class'] = {
       fn: function() { /* @ts-ignore */ return 'base ' + this.v; },
+      refs: ['v'],
       t: 'attribute',
       k: 'class'
     };
@@ -141,6 +142,7 @@ describe("runtime", () => {
     body.values['v'] = { fn: () => 'Alice' };
     body.values[`${lang.TEXT_ID_PREFIX}0`] = {
       fn: function() { /* @ts-ignore */ return this.v; },
+      refs: ['v'],
       t: 'text',
       k: '0'
     };
@@ -161,24 +163,6 @@ describe("runtime", () => {
         <body data-aremel="2">Hello <!---:0-->Bob<!---/0-->!</body>
       </html>`)
     );
-  });
-
-  it(`explicit dependency`, () => {
-    //TODO: because app.refresh() pulls dependencies this doesn't actually
-    //test the explicit dependency yet
-    const doc = baseDoc();
-    const state = baseState();
-    state.root.values['v'] = { fn: function() { return 1; } };
-    state.root.values['x'] = { fn: function() {
-      /* @ts-ignore */ return this.v + 1;
-    }, refs: ['v'] };
-    const app = new rt.App(doc, state);
-    app.refresh();
-    assert.equal(app.root.obj.v, 1);
-    assert.equal(app.root.obj.x, 2);
-    app.root.obj.v = 2;
-    assert.equal(app.root.state.values['v'].v, 2);
-    assert.equal(app.root.state.values['x'].v, 3);
   });
 
 });

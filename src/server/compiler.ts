@@ -133,6 +133,14 @@ function compileValue(
     p.push(makeProperty('v', { type: 'Literal', value: prop.val }));
   }
 
+  if (key.startsWith(rt.ATTR_VALUE_PREFIX)) {
+    p.push(makeProperty('t', { type: 'Literal', value: 'attribute'}));
+    p.push(makeProperty('k', { type: 'Literal', value: key.substring(rt.ATTR_VALUE_PREFIX.length)}));
+  } else if (key.startsWith(lang.TEXT_ID_PREFIX)) {
+    p.push(makeProperty('t', { type: 'Literal', value: 'text'}));
+    p.push(makeProperty('k', { type: 'Literal', value: key.substring(lang.TEXT_ID_PREFIX.length)}));
+  }
+
   return {
     type: "ObjectExpression",
     properties: p,

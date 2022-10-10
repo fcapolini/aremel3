@@ -273,7 +273,11 @@ describe("compiler", () => {
     assert.equal(normalizeSpace(src), normalizeSpace(`{
       root: {
         id: 0, aka: 'page', values: {
-          attr_lang: { fn: function () { return 'en'; } }
+          attr_lang: {
+            fn: function () { return 'en'; },
+            t: 'attribute',
+            k: 'lang'
+          }
         }, children: [
           { id: 1, aka: 'head', values: {} },
           { id: 2, aka: 'body', values: {} }
@@ -329,7 +333,11 @@ describe("compiler", () => {
         id: 0, aka: 'page', values: {}, children: [
           { id: 1, aka: 'head', values: {} },
           { id: 2, aka: 'body', values: {
-            __t$0: { fn: function () { return 'there'; } }
+            __t$0: {
+              fn: function () { return 'there'; },
+              t: 'text',
+              k: '0'
+            }
           } }
         ]
       }
