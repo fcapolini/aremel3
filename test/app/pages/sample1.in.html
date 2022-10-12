@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  </head>
+  <body :v=[[10]]>
+    <button :event-click=[[() => v--]]>-</button>
+    [[v]]
+    <button :event-click=[[() => v++]]>+</button>
+  </body>
+</html>

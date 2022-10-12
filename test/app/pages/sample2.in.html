@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <:define tag="app-product" :name :price>
+      <b>Product: [[name]]</b>
+      <div>Price: [[price]]</div>
+      <p/>
+    </:define>
+  </head>
+  <body>
+    <app-product :name="Thingy" :price="1$"/>
+    <app-product :name="Widget" :price="2$"/>
+    <app-product :name="Gadget" :price="3$"/>
+  </body>
+</html>

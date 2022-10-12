@@ -3,6 +3,11 @@ import estraverse from "estraverse";
 
 const GLOBALS = new Set(['console']);
 
+// https://caniuse.com/arrow-functions
+// https://stackoverflow.com/questions/22939130/when-should-i-use-arrow-functions-in-ecmascript-6#:~:text=Should%20arrow%20functions%20be%20used%20e.g.%3A%201%20%22everywhere,functions%20that%20do%20not%20contain%20another%20arrow%20function
+
+//TODO: event handler functions
+
 export function makeFunction(script: es.Program, references: Set<string>): es.FunctionExpression {
   return {
     type: 'FunctionExpression',

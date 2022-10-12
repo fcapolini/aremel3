@@ -10,11 +10,13 @@ export const TEXT_COMMENT2 = '-/';
 
 export const NOTNULL_FN = lang.RESERVED_PREFIX + 'nn';
 export const ATTR_VALUE_PREFIX = 'attr_';
+
+export const EVENT_VALUE_PREFIX = 'event_';
+
 //TODO:
 // export const CLASS_VALUE_PREFIX = 'class_';
 // export const STYLE_VALUE_PREFIX = 'style_';
 // export const ON_VALUE_PREFIX = 'on_';
-// export const EVENT_VALUE_PREFIX = 'event_';
 // export const DATA_VALUE = 'data';
 
 export interface AppState {
@@ -34,7 +36,7 @@ export interface ValueState {
   fn?: () => any
   pos?: ValuePos
   cycle?: number
-  t?: 'attribute' | 'text' //TODO: | 'class' | 'style'
+  t?: 'attribute' | 'text' | 'event' //TODO: | 'class' | 'style'
   k?: string
   v?: any
   refs?: string[]

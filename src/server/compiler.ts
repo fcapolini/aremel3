@@ -101,7 +101,8 @@ function compileValues(node: lang.Node, app: lang.App): es.ObjectExpression {
     } else {
       key = rt.ATTR_VALUE_PREFIX + key;
     }
-    p.push(makeProperty(key, compileValue(key, prop, node, app)));
+    const v = compileValue(key, prop, node, app);
+    p.push(makeProperty(v.key, v.obj));
   });
   return {
     type: "ObjectExpression",
@@ -114,7 +115,7 @@ function compileValues(node: lang.Node, app: lang.App): es.ObjectExpression {
  */
 function compileValue(
   key: string, prop: lang.Prop, node: lang.Node, app: lang.App
-): es.ObjectExpression {
+): { key: string, obj: es.ObjectExpression } {
   const p: es.Property[] = [];
 
   if (expr.isDynamic(prop.val)) {
@@ -139,11 +140,16 @@ function compileValue(
   } else if (key.startsWith(rt.TEXT_ID_PREFIX)) {
     p.push(makeProperty('t', { type: 'Literal', value: 'text'}));
     p.push(makeProperty('k', { type: 'Literal', value: key.substring(rt.TEXT_ID_PREFIX.length)}));
+  } else if (key.startsWith(lang.EVENT_ATTR_PREFIX)) {
+    const eventName = key.substring(lang.EVENT_ATTR_PREFIX.length);
+    key = rt.EVENT_VALUE_PREFIX + eventName;
+    p.push(makeProperty('t', { type: 'Literal', value: 'event'}));
+    p.push(makeProperty('k', { type: 'Literal', value: eventName}));
   }
 
   return {
-    type: "ObjectExpression",
-    properties: p,
+    key: key,
+    obj: { type: "ObjectExpression", properties: p }
   };
 }
 
