@@ -2,6 +2,7 @@ import { assert } from "chai";
 import { HtmlDocument } from "../../src/server/htmldom";
 import { load } from "../../src/server/loader";
 import * as l from "../../src/server/lang";
+import * as r from "../../src/shared/runtime";
 import Preprocessor from "../../src/server/preprocessor";
 import { DomDocument } from "../../src/shared/dom";
 import { normalizeText } from "../../src/shared/util";
@@ -95,12 +96,12 @@ describe("loader", () => {
     const body = app.root?.children[1];
     assert.equal(body?.dom.tagName, 'BODY');
     assert.equal(body?.props.size, 1);
-    assert.equal(body?.props.get(`${l.TEXT_ID_PREFIX}0`)?.val, '[[v]]');
+    assert.equal(body?.props.get(`${r.TEXT_ID_PREFIX}0`)?.val, '[[v]]');
     assert.equal(
       normalizeText(app.doc?.toString(true)),
       normalizeText(`<html class="all" data-aremel="0" lang="">
         <head data-aremel="1"></head>
-        <body data-aremel="2"><!--${l.TEXT_COMMENT1}0--><!--${l.TEXT_COMMENT2}0--></body>
+        <body data-aremel="2"><!--${r.TEXT_COMMENT1}0--><!--${r.TEXT_COMMENT2}0--></body>
       </html>
       `)
     );
@@ -116,12 +117,12 @@ describe("loader", () => {
     const body = app.root?.children[1];
     assert.equal(body?.dom.tagName, 'BODY');
     assert.equal(body?.props.size, 1);
-    assert.equal(body?.props.get(`${l.TEXT_ID_PREFIX}0`)?.val, '[[v]]');
+    assert.equal(body?.props.get(`${r.TEXT_ID_PREFIX}0`)?.val, '[[v]]');
     assert.equal(
       normalizeText(app.doc?.toString(true)),
       normalizeText(`<html class="all" data-aremel="0" lang="">
         <head data-aremel="1"></head>
-        <body data-aremel="2">value: <!--${l.TEXT_COMMENT1}0--><!--${l.TEXT_COMMENT2}0-->...</body>
+        <body data-aremel="2">value: <!--${r.TEXT_COMMENT1}0--><!--${r.TEXT_COMMENT2}0-->...</body>
       </html>
       `)
     );

@@ -2,6 +2,7 @@ import { DomNode, ELEMENT_NODE } from "../shared/dom";
 import { HtmlAttribute, HtmlDocument, HtmlElement, HtmlText } from "./htmldom";
 import * as expr from "./expr";
 import * as lang from "./lang";
+import * as rt from "../shared/runtime";
 import Preprocessor, { SourcePos } from "./preprocessor";
 import { HtmlException } from "./htmlparser";
 
@@ -161,16 +162,16 @@ function loadNodeTexts(node: lang.Node, dom: HtmlText, pre: Preprocessor) {
       if ((i = text.indexOf(lang.EXPR_MARKER2, i1)) >= i1) {
         i2 = i;
         id = node.props.size;
-        n = dom.ownerDocument?.createComment(`${lang.TEXT_COMMENT1}${id}`)
+        n = dom.ownerDocument?.createComment(`${rt.TEXT_COMMENT1}${id}`)
         dom.parentElement?.insertBefore(n as DomNode, dom);
         const expr = text.substring(i1, i2).trim();
         if (expr.length > 0) {
-          node.props.set(`${lang.TEXT_ID_PREFIX}${id}`, {
+          node.props.set(`${rt.TEXT_ID_PREFIX}${id}`, {
             val: `${lang.EXPR_MARKER1}${expr}${lang.EXPR_MARKER2}`,
             pos: pre.getSourcePos(dom.pos),
           });
         }
-        n = dom.ownerDocument?.createComment(`${lang.TEXT_COMMENT2}${id}`)
+        n = dom.ownerDocument?.createComment(`${rt.TEXT_COMMENT2}${id}`)
         dom.parentElement?.insertBefore(n as DomNode, dom);
         i2 += lang.EXPR_MARKER2_LEN;
       } else {

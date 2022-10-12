@@ -133,14 +133,14 @@ describe("runtime", () => {
     const doc = baseDoc();
     const e = doc.firstElementChild?.firstElementChild?.nextElementSibling as HtmlElement;
     e.addChild(doc.createTextNode('Hello '));
-    e.addChild(doc.createComment(lang.TEXT_COMMENT1 + '0'));
+    e.addChild(doc.createComment(rt.TEXT_COMMENT1 + '0'));
     e.addChild(doc.createTextNode(' '));
-    e.addChild(doc.createComment(lang.TEXT_COMMENT2 + '0'));
+    e.addChild(doc.createComment(rt.TEXT_COMMENT2 + '0'));
     e.addChild(doc.createTextNode('!'));
     const state = baseState();
     const body = (state.root.children && state.root.children[1]) as rt.ScopeState;
     body.values['v'] = { fn: () => 'Alice' };
-    body.values[`${lang.TEXT_ID_PREFIX}0`] = {
+    body.values[`${rt.TEXT_ID_PREFIX}0`] = {
       fn: function() { /* @ts-ignore */ return this.v; },
       refs: ['v'],
       t: 'text',

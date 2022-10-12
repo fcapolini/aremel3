@@ -96,7 +96,7 @@ function compileValues(node: lang.Node, app: lang.App): es.ObjectExpression {
   node.props.forEach((prop, key) => {
     if (key.startsWith(lang.LOGIC_ATTR_PREFIX)) {
       key = key.substring(lang.LOGIC_ATTR_PREFIX.length);
-    } else if (key.startsWith(lang.TEXT_ID_PREFIX)) {
+    } else if (key.startsWith(rt.TEXT_ID_PREFIX)) {
       // nop
     } else {
       key = rt.ATTR_VALUE_PREFIX + key;
@@ -136,9 +136,9 @@ function compileValue(
   if (key.startsWith(rt.ATTR_VALUE_PREFIX)) {
     p.push(makeProperty('t', { type: 'Literal', value: 'attribute'}));
     p.push(makeProperty('k', { type: 'Literal', value: key.substring(rt.ATTR_VALUE_PREFIX.length)}));
-  } else if (key.startsWith(lang.TEXT_ID_PREFIX)) {
+  } else if (key.startsWith(rt.TEXT_ID_PREFIX)) {
     p.push(makeProperty('t', { type: 'Literal', value: 'text'}));
-    p.push(makeProperty('k', { type: 'Literal', value: key.substring(lang.TEXT_ID_PREFIX.length)}));
+    p.push(makeProperty('k', { type: 'Literal', value: key.substring(rt.TEXT_ID_PREFIX.length)}));
   }
 
   return {

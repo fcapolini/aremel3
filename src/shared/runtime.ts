@@ -3,6 +3,11 @@ import * as lang from "../server/lang";
 
 const MODE: 'pull' | 'refs' = 'refs';
 
+export const TEXT_ID_PREFIX = '__t$';
+export const TEXT_COMMENT1 = '-:';
+export const TEXT_COMMENT1_LEN = TEXT_COMMENT1.length;
+export const TEXT_COMMENT2 = '-/';
+
 export const NOTNULL_FN = lang.RESERVED_PREFIX + 'nn';
 export const ATTR_VALUE_PREFIX = 'attr_';
 //TODO:
@@ -119,14 +124,14 @@ export class Scope {
       e.childNodes.forEach(n => {
         if (n.nodeType === COMMENT_NODE) {
           const s = (n as DomTextNode).nodeValue;
-          if (s.startsWith(lang.TEXT_COMMENT1)) {
-            const id = s.substring(lang.TEXT_COMMENT1_LEN);
+          if (s.startsWith(TEXT_COMMENT1)) {
+            const id = s.substring(TEXT_COMMENT1_LEN);
             const t = n.nextSibling;
             if (t?.nodeType === TEXT_NODE) {
               ret.set(id, t as DomTextNode);
             } else if (t?.nodeType === COMMENT_NODE) {
               const s = (t as DomTextNode).nodeValue;
-              if (s.startsWith(lang.TEXT_COMMENT2)) {
+              if (s.startsWith(TEXT_COMMENT2)) {
                 const n = that.app.doc.createTextNode('');
                 e.insertBefore(n, t);
                 ret.set(id, n);
