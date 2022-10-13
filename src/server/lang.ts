@@ -12,6 +12,7 @@ export const EXPR_MARKER2_LEN = EXPR_MARKER2.length;
 export const RESERVED_PREFIX = '__';
 
 export const EVENT_ATTR_PREFIX = 'event-';
+export const HANDLER_ATTR_PREFIX = 'on-';
 
 export interface App {
   pre: Preprocessor

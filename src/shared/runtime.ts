@@ -12,6 +12,9 @@ export const NOTNULL_FN = lang.RESERVED_PREFIX + 'nn';
 export const ATTR_VALUE_PREFIX = 'attr_';
 
 export const EVENT_VALUE_PREFIX = 'event_';
+export const HANDLER_VALUE_PREFIX = 'on_';
+
+const UNDEFINED: ValueState = { passive: true, v: undefined };
 
 //TODO:
 // export const CLASS_VALUE_PREFIX = 'class_';
@@ -36,12 +39,15 @@ export interface ValueState {
   fn?: () => any
   pos?: ValuePos
   cycle?: number
-  t?: 'attribute' | 'text' | 'event' //TODO: | 'class' | 'style'
+  t?: 'attribute' | 'text' | 'event' | 'handler' //TODO: | 'class' | 'style'
   k?: string
   v?: any
   refs?: string[]
   upstream?: Set<ValueState>
   downstream?: Set<ValueState>
+  // indicates this value doesn't participate in reactivity
+  // (e.g. a global or a function)
+  passive?: boolean
 }
 
 export interface ValuePos {
@@ -89,6 +95,10 @@ export class App {
     }
     doc.firstElementChild && f(doc.firstElementChild);
     return ret;
+  }
+
+  globalLookup(key: string): ValueState | undefined {
+    return UNDEFINED;
   }
 }
 
@@ -159,6 +169,9 @@ export class Scope {
       ret = Reflect.get(target, prop, target);
       scope = scope.parent;
     }
+    if (!ret) {
+      ret = this.app.globalLookup(prop);
+    }
     return ret;
   }
 
@@ -170,7 +183,7 @@ export class Scope {
       }
       MODE === 'refs' && value.refs?.forEach(id => {
         const other = this.lookup(id);
-        if (other) {
+        if (other && !other.passive) {
           (value.upstream ?? (value.upstream = new Set())).add(other);
           (other.downstream ?? (other.downstream = new Set())).add(value);
         }
@@ -208,14 +221,14 @@ class ScopeHandler implements ProxyHandler<any> {
 
   get(target: any, prop: string, receiver?: any) {
     const value = this.scope.lookup(prop);
-    value && this.update(value);
+    value && !value.passive && this.update(value);
     return value?.v;
   }
 
   set(target: any, prop: string, val: any, receiver?: any) {
     const value = this.scope.lookup(prop);
 
-    if (value) {
+    if (value && !value.passive) {
       const old = value.v;
       value.v = val;
       delete value.fn;
@@ -233,8 +246,10 @@ class ScopeHandler implements ProxyHandler<any> {
       if (MODE === 'pull' && this.app.pullStack) {
         if (this.app.pullStack.length > 0) {
           const o = this.app.pullStack[this.app.pullStack.length - 1];
-          (value.downstream ?? (value.downstream = new Set())).add(o);
-          (o.upstream ?? (o.upstream = new Set())).add(value);
+          if (!o.passive) {
+            (value.downstream ?? (value.downstream = new Set())).add(o);
+            (o.upstream ?? (o.upstream = new Set())).add(value);
+          }
         }
         this.app.pullStack?.push(value);
       }

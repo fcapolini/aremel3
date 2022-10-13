@@ -141,10 +141,9 @@ function compileValue(
     p.push(makeProperty('t', { type: 'Literal', value: 'text'}));
     p.push(makeProperty('k', { type: 'Literal', value: key.substring(rt.TEXT_ID_PREFIX.length)}));
   } else if (key.startsWith(lang.EVENT_ATTR_PREFIX)) {
-    const eventName = key.substring(lang.EVENT_ATTR_PREFIX.length);
-    key = rt.EVENT_VALUE_PREFIX + eventName;
-    p.push(makeProperty('t', { type: 'Literal', value: 'event'}));
-    p.push(makeProperty('k', { type: 'Literal', value: eventName}));
+    key = addValueInfo(key, lang.EVENT_ATTR_PREFIX, rt.EVENT_VALUE_PREFIX, 'event', true, p);
+  } else if (key.startsWith(lang.HANDLER_ATTR_PREFIX)) {
+    key = addValueInfo(key, lang.HANDLER_ATTR_PREFIX, rt.HANDLER_VALUE_PREFIX, 'event', true, p);
   }
 
   return {
@@ -153,11 +152,21 @@ function compileValue(
   };
 }
 
+function addValueInfo(
+  key: string, langPrefix: string, rtPrefix: string, type: string, passive: boolean, p: es.Property[]
+): string {
+  const name = key.substring(langPrefix.length);
+  key = rtPrefix + name;
+  p.push(makeProperty('k', { type: 'Literal', value: key}));
+  p.push(makeProperty('t', { type: 'Literal', value: type}));
+  passive && p.push(makeProperty('passive', { type: 'Literal', value: true}));
+  return key;
+}
+
 function compileExpression(
   prop: lang.Prop, node: lang.Node, app: lang.App, refs: Set<string>
 ): es.FunctionExpression | undefined {
   let ast: es.Program | undefined;
-
 
   try {
     if (prop.pos) {

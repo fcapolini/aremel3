@@ -158,7 +158,7 @@ describe("code", () => {
     const src = generate(ast);
     assert.equal(normalizeSpace(src), normalizeSpace(`function () {
       let x = 0, y = 1;
-      for (let z = 0; z < 10; z++) console.log(z);
+      for (let z = 0; z < 10; z++) this.console.log(z);
       return x + y + this.z + 1;
     }`));
   });

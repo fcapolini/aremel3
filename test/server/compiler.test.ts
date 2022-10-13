@@ -174,7 +174,7 @@ describe("compiler", () => {
     assert.equal(normalizeSpace(src), normalizeSpace(`{
       root: {
         id: 0, aka: 'page', values: {
-          msg: { fn: function () { return console.log('hi'); } }
+          msg: { fn: function () { return this.console.log('hi'); }, refs: ['console'] }
         }, children: [
           { id: 1, aka: 'head', values: {} },
           { id: 2, aka: 'body', values: {} }
@@ -194,7 +194,7 @@ describe("compiler", () => {
     assert.equal(normalizeSpace(src), normalizeSpace(`{
       root: {
         id: 0, aka: 'page', values: {
-          msg: { fn: function () { 'hi'; return console.log('hi'); } }
+          msg: { fn: function () { 'hi'; return this.console.log('hi'); }, refs: ['console'] }
         }, children: [
           { id: 1, aka: 'head', values: {} },
           { id: 2, aka: 'body', values: {} }
@@ -214,7 +214,7 @@ describe("compiler", () => {
     assert.equal(normalizeSpace(src), normalizeSpace(`{
       root: {
         id: 0, aka: 'page', values: {
-          msg: { fn: function () { console.log('hi'); return 'hi'; } }
+          msg: { fn: function () { this.console.log('hi'); return 'hi'; }, refs: ['console'] }
         }, children: [
           { id: 1, aka: 'head', values: {} },
           { id: 2, aka: 'body', values: {} }
