@@ -404,11 +404,7 @@ export class HtmlText extends HtmlNode implements DomTextNode {
   }
 
   override output(sb: StringBuf, sort: boolean, plain: boolean): StringBuf {
-    if (!this.nodeValue) {
-      // make sure collapsed text nodes are represented in output
-      // https://stackoverflow.com/a/2814268/12573599
-      sb.add('&zwnj;');
-    } else {
+    if (this.nodeValue != null) {
       sb.add(this.nodeValue
         ? (this.escape ? htmlEscape2(this.nodeValue) : this.nodeValue)
         : '');

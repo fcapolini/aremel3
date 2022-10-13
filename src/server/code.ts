@@ -90,6 +90,10 @@ function qualifyIdentifiers(body: es.BlockStatement, references: Set<string>) {
           addLocalId(node.name, isVar);
           return;
         }
+        if (parent?.type === 'Property' && parent.key === node) {
+          return;
+        }
+        //TODO: exclude function parameters?
         references.add(node.name);
         return {
           type: 'MemberExpression',
