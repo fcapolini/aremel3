@@ -274,9 +274,9 @@ describe("compiler", () => {
       root: {
         id: 0, aka: 'page', values: {
           attr_lang: {
-            fn: function () { return 'en'; },
             t: 'attribute',
-            k: 'lang'
+            k: 'lang',
+            fn: function () { return 'en'; }
           }
         }, children: [
           { id: 1, aka: 'head', values: {} },
@@ -334,9 +334,9 @@ describe("compiler", () => {
           { id: 1, aka: 'head', values: {} },
           { id: 2, aka: 'body', values: {
             __t$0: {
-              fn: function () { return 'there'; },
               t: 'text',
-              k: '0'
+              k: '0',
+              fn: function () { return 'there'; }
             }
           } }
         ]

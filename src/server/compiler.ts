@@ -118,9 +118,21 @@ function compileValue(
 ): { key: string, obj: es.ObjectExpression } {
   const p: es.Property[] = [];
 
+  if (key.startsWith(rt.ATTR_VALUE_PREFIX)) {
+    p.push(makeProperty('t', { type: 'Literal', value: 'attribute'}));
+    p.push(makeProperty('k', { type: 'Literal', value: key.substring(rt.ATTR_VALUE_PREFIX.length)}));
+  } else if (key.startsWith(rt.TEXT_ID_PREFIX)) {
+    p.push(makeProperty('t', { type: 'Literal', value: 'text'}));
+    p.push(makeProperty('k', { type: 'Literal', value: key.substring(rt.TEXT_ID_PREFIX.length)}));
+  } else if (key.startsWith(lang.EVENT_ATTR_PREFIX)) {
+    key = addValueInfo(key, lang.EVENT_ATTR_PREFIX, rt.EVENT_VALUE_PREFIX, 'event', true, p);
+  } else if (key.startsWith(lang.HANDLER_ATTR_PREFIX)) {
+    key = addValueInfo(key, lang.HANDLER_ATTR_PREFIX, rt.HANDLER_VALUE_PREFIX, 'event', true, p);
+  }
+
   if (expr.isDynamic(prop.val)) {
     const refs = new Set<string>();
-    const e = compileExpression(prop, node, app, refs);
+    const e = compileExpression(key, prop, node, app, refs);
     e && p.push(makeProperty('fn', e));
     if (refs.size > 0) {
       const a: es.ArrayExpression = {
@@ -132,18 +144,6 @@ function compileValue(
     }
   } else {
     p.push(makeProperty('v', { type: 'Literal', value: prop.val }));
-  }
-
-  if (key.startsWith(rt.ATTR_VALUE_PREFIX)) {
-    p.push(makeProperty('t', { type: 'Literal', value: 'attribute'}));
-    p.push(makeProperty('k', { type: 'Literal', value: key.substring(rt.ATTR_VALUE_PREFIX.length)}));
-  } else if (key.startsWith(rt.TEXT_ID_PREFIX)) {
-    p.push(makeProperty('t', { type: 'Literal', value: 'text'}));
-    p.push(makeProperty('k', { type: 'Literal', value: key.substring(rt.TEXT_ID_PREFIX.length)}));
-  } else if (key.startsWith(lang.EVENT_ATTR_PREFIX)) {
-    key = addValueInfo(key, lang.EVENT_ATTR_PREFIX, rt.EVENT_VALUE_PREFIX, 'event', true, p);
-  } else if (key.startsWith(lang.HANDLER_ATTR_PREFIX)) {
-    key = addValueInfo(key, lang.HANDLER_ATTR_PREFIX, rt.HANDLER_VALUE_PREFIX, 'event', true, p);
   }
 
   return {
@@ -164,7 +164,7 @@ function addValueInfo(
 }
 
 function compileExpression(
-  prop: lang.Prop, node: lang.Node, app: lang.App, refs: Set<string>
+  key: string, prop: lang.Prop, node: lang.Node, app: lang.App, refs: Set<string>
 ): es.FunctionExpression | undefined {
   let ast: es.Program | undefined;
 
@@ -180,6 +180,6 @@ function compileExpression(
     addError('err', 'expression parsing', ex, app, prop.pos);
   }
 
-  const ret = ast ? code.makeFunction(ast, refs) : undefined;
+  const ret = ast ? code.makeValueFunction(key, ast, refs) : undefined;
   return ret;
 }

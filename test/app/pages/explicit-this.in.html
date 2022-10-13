@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html :where="there">
+  <head></head>
+  <!---
+    in aremel `this` means "this scope" (and up, given how scopes work);
+    if omitted, it's added by the compiler
+  -->
+  <body>hi [[this.where]]!</body>
+</html>

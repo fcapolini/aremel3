@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html :where="there">
+  <head></head>
+  <!---
+    when a given value refers to a value with the same name,
+    it's actually "refining" an outer value
+  -->
+  <body :where=[[where + '...']]>hi [[where]]!</body>
+</html>

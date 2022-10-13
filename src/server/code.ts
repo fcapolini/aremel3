@@ -1,20 +1,21 @@
-import * as es from "estree";
 import estraverse from "estraverse";
+import * as es from "estree";
+import * as rt from "../shared/runtime";
 
 // https://caniuse.com/arrow-functions
 // https://stackoverflow.com/questions/22939130/when-should-i-use-arrow-functions-in-ecmascript-6#:~:text=Should%20arrow%20functions%20be%20used%20e.g.%3A%201%20%22everywhere,functions%20that%20do%20not%20contain%20another%20arrow%20function
 
 //TODO: event handler functions
 
-export function makeFunction(script: es.Program, references: Set<string>): es.FunctionExpression {
+export function makeValueFunction(key: string | null, script: es.Program, references: Set<string>): es.FunctionExpression {
   return {
     type: 'FunctionExpression',
     params: [],
-    body: makeFunctionBody(script.body as es.Statement[], references)
+    body: makeFunctionBody(key, script.body as es.Statement[], references)
   }
 }
 
-function makeFunctionBody(statements: es.Statement[], references: Set<string>): es.BlockStatement {
+function makeFunctionBody(key: string | null, statements: es.Statement[], references: Set<string>): es.BlockStatement {
   const len = statements.length;
   for (let i = 0; i < len; i++) {
     const node: any = statements[i];
@@ -32,11 +33,11 @@ function makeFunctionBody(statements: es.Statement[], references: Set<string>): 
     type: 'BlockStatement',
     body: statements
   }
-  qualifyIdentifiers(ret, references);
+  qualifyIdentifiers(key, ret, references);
   return ret;
 }
 
-function qualifyIdentifiers(body: es.BlockStatement, references: Set<string>) {
+function qualifyIdentifiers(key: string | null, body: es.BlockStatement, references: Set<string>) {
   const scopes: Array<{ isFunction: boolean, ids: Set<string> }> = [];
 
   function enterScope(isFunction: boolean) {
@@ -95,11 +96,23 @@ function qualifyIdentifiers(body: es.BlockStatement, references: Set<string>) {
         }
         //TODO: exclude function parameters?
         references.add(node.name);
+        let obj: es.Node;
+        if (!key || node.name !== key) {
+          obj = { type: 'ThisExpression' };
+        } else {
+          obj = {
+            type: 'MemberExpression',
+            computed: false,
+            optional: false,
+            object: { type: 'ThisExpression' },
+            property: { type: 'Identifier', name: rt.OUTER_PROPERTY }
+          };
+        }
         return {
           type: 'MemberExpression',
           computed: false,
           optional: false,
-          object: { type: 'ThisExpression' },
+          object: obj,
           property: node
         }
       } else if (node.type === 'BlockStatement') {

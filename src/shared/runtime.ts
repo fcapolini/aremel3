@@ -9,6 +9,7 @@ export const TEXT_COMMENT1_LEN = TEXT_COMMENT1.length;
 export const TEXT_COMMENT2 = '-/';
 
 export const NOTNULL_FN = lang.RESERVED_PREFIX + 'nn';
+export const OUTER_PROPERTY = lang.RESERVED_PREFIX + 'outer';
 export const ATTR_VALUE_PREFIX = 'attr_';
 
 export const EVENT_VALUE_PREFIX = 'event_';
@@ -161,9 +162,9 @@ export class Scope {
     return ret.size > 0 ? ret : undefined;
   }
 
-  lookup(prop: string): ValueState | undefined {
+  lookup(prop: string, outer?: boolean): ValueState | undefined {
     let ret = undefined;
-    let scope: Scope | undefined = this;
+    let scope: Scope | undefined = (outer ? this.parent : this);
     while (scope && !ret) {
       const target = scope.state.values;
       ret = Reflect.get(target, prop, target);
@@ -182,7 +183,7 @@ export class Scope {
         delete value.upstream;
       }
       MODE === 'refs' && value.refs?.forEach(id => {
-        const other = this.lookup(id);
+        const other = this.lookup(id, id === key);
         if (other && !other.passive) {
           (value.upstream ?? (value.upstream = new Set())).add(other);
           (other.downstream ?? (other.downstream = new Set())).add(value);
@@ -220,12 +221,18 @@ class ScopeHandler implements ProxyHandler<any> {
   }
 
   get(target: any, prop: string, receiver?: any) {
+    if (prop === OUTER_PROPERTY) {
+      return this.scope.parent?.obj;
+    }
     const value = this.scope.lookup(prop);
     value && !value.passive && this.update(value);
     return value?.v;
   }
 
   set(target: any, prop: string, val: any, receiver?: any) {
+    if (prop.startsWith(lang.RESERVED_PREFIX)) {
+      return false;
+    }
     const value = this.scope.lookup(prop);
 
     if (value && !value.passive) {
