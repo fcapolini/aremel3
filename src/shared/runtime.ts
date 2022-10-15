@@ -11,17 +11,13 @@ export const TEXT_COMMENT2 = '-/';
 export const NOTNULL_FN = lang.RESERVED_PREFIX + 'nn';
 export const OUTER_PROPERTY = lang.RESERVED_PREFIX + 'outer';
 export const ATTR_VALUE_PREFIX = 'attr_';
-
 export const EVENT_VALUE_PREFIX = 'event_';
 export const HANDLER_VALUE_PREFIX = 'on_';
-
-const UNDEFINED: ValueState = { passive: true, v: undefined };
-
-//TODO:
 // export const CLASS_VALUE_PREFIX = 'class_';
 // export const STYLE_VALUE_PREFIX = 'style_';
-// export const ON_VALUE_PREFIX = 'on_';
-// export const DATA_VALUE = 'data';
+export const DATA_VALUE = 'data';
+
+const UNDEFINED: ValueState = { passive: true, v: undefined };
 
 export interface AppState {
   root: ScopeState
@@ -214,10 +210,14 @@ export class Scope {
 class ScopeHandler implements ProxyHandler<any> {
   app: App;
   scope: Scope;
+  replicator?: ScopeReplicator;
 
   constructor(app: App, scope: Scope) {
     this.app = app;
     this.scope = scope;
+    if (scope.state.values[DATA_VALUE]) {
+      this.replicator = new ScopeReplicator(scope, scope.state.values[DATA_VALUE]);
+    }
   }
 
   get(target: any, prop: string, receiver?: any) {
@@ -310,5 +310,19 @@ class ScopeHandler implements ProxyHandler<any> {
       } catch (ignored: any) {}
       this.app.pushLevel--;
     }
+  }
+}
+
+// =============================================================================
+// ScopeReplicator
+// =============================================================================
+
+class ScopeReplicator {
+  scope: Scope;
+  value: ValueState;
+
+  constructor(scope: Scope, value: ValueState) {
+    this.scope = scope;
+    this.value = value;
   }
 }
