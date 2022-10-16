@@ -47,6 +47,15 @@ export class HtmlNode implements DomNode {
     return this;
   }
 
+  cloneNode(deep: boolean): DomNode {
+    return new HtmlNode(
+      this.ownerDocument as HtmlDocument | undefined,
+      undefined,
+      this.nodeType,
+      this.pos.i1, this.pos.i2, this.pos.origin
+    );
+  }
+
   toString(sort = false, plain = false) {
     var sb = new StringBuf();
     this.output(sb, sort, plain);
@@ -306,6 +315,25 @@ export class HtmlElement extends HtmlNode implements DomElement {
     return sb.toString();
   }
 
+  cloneNode(deep: boolean): DomNode {
+    const ret = new HtmlElement(
+      this.ownerDocument as HtmlDocument | undefined,
+      undefined,
+      this.tagName,
+      this.pos.i1, this.pos.i2, this.pos.origin
+    );
+    this.attributes.forEach((v, k) => {
+      ret.setAttribute(k, v._value);
+    });
+    ret.selfclose = this.selfclose;
+    if (deep) {
+      this.children.forEach(n => {
+        ret.addChild(n.cloneNode(deep));
+      });
+    }
+    return ret;
+  }
+
   override output(sb: StringBuf, sort: boolean, plain: boolean): StringBuf {
     var name = this.tagName.toLowerCase();
     sb.add('<'); sb.add(name);
@@ -403,6 +431,18 @@ export class HtmlText extends HtmlNode implements DomTextNode {
     this.nodeValue = (escape ? htmlUnescape(text) : text);
   }
 
+  cloneNode(deep: boolean): DomNode {
+    const ret = new HtmlText(
+      this.ownerDocument as HtmlDocument | undefined,
+      undefined,
+      this.nodeValue,
+      this.pos.i1, this.pos.i2, this.pos.origin,
+      false
+    );
+    ret.escape = this.escape;
+    return ret;
+  }
+
   override output(sb: StringBuf, sort: boolean, plain: boolean): StringBuf {
     if (this.nodeValue != null) {
       sb.add(this.nodeValue
@@ -447,6 +487,15 @@ export class HtmlComment extends HtmlNode implements DomComment {
   ) {
     super(doc, parent, COMMENT_NODE, i1, i2, origin);
     this.nodeValue = text;
+  }
+
+  cloneNode(deep: boolean): DomNode {
+    return new HtmlComment(
+      this.ownerDocument as HtmlDocument | undefined,
+      undefined,
+      this.nodeValue,
+      this.pos.i1, this.pos.i2, this.pos.origin
+    );
   }
 
   override output(sb: StringBuf, sort: boolean, plain: boolean): StringBuf {

@@ -60,7 +60,7 @@ export interface ValuePos {
 export class App {
 	doc: DomDocument;
 	state: AppState;
-  domMap: Map<string, DomElement>;
+  domMap: DomMap;
   root: Scope;
   pullStack?: ValueState[];
   pushLevel?: number;
@@ -68,8 +68,8 @@ export class App {
   constructor(doc: DomDocument, state: AppState) {
     this.doc = doc;
     this.state = state;
-    this.domMap = this.getDomMap(doc);
-    this.root = new Scope(this, state.root);
+    this.domMap = new DomMap(doc.firstElementChild);
+    this.root = new Scope(this, this.domMap, state.root);
   }
 
   refresh(scope?: Scope) {
@@ -83,19 +83,37 @@ export class App {
     return this;
   }
 
-  getDomMap(doc: DomDocument) {
-    const ret = new Map<string, DomElement>();
-    function f(e: DomElement) {
-      const id = e.getAttribute(lang.ID_ATTR);
-      id && ret.set(id, e);
-      e.childNodes.forEach(n => n.nodeType === ELEMENT_NODE && f(n as DomElement));
-    }
-    doc.firstElementChild && f(doc.firstElementChild);
-    return ret;
-  }
-
   globalLookup(key: string): ValueState | undefined {
     return UNDEFINED;
+  }
+}
+
+class DomMap {
+  parent?: DomMap;
+  map: Map<string, DomElement>;
+
+  constructor(root?: DomElement, parent?: DomMap) {
+    this.parent = parent;
+    const map = this.map = new Map();
+
+    function f(e: DomElement) {
+      const id = e.getAttribute(lang.ID_ATTR);
+      id && map.set(id, e);
+      e.childNodes.forEach(n => n.nodeType === ELEMENT_NODE && f(n as DomElement));
+    }
+    root && f(root);
+  }
+
+  get size() {
+    return this.map.size;
+  }
+
+  get(id: string): DomElement | undefined {
+    let ret;
+    for (let that = this as DomMap | undefined; that && !ret; that = that.parent) {
+      ret = that.map.get(id);
+    }
+    return ret;
   }
 }
 
@@ -110,20 +128,22 @@ export class Scope {
 	children: Scope[]
 	obj: any
   dom?: DomElement
+  domMap: DomMap
   textMap?: Map<string, DomTextNode>
 
-  constructor(app: App, state: ScopeState, parent?: Scope) {
+  constructor(app: App, domMap: DomMap, state: ScopeState, parent?: Scope) {
     this.app = app;
     this.state = state;
     this.parent = parent;
     this.children = [];
     this.obj = new Proxy<any>(this.state.values, new ScopeHandler(app, this))
-    this.dom = app.domMap.get(`${state.id}`);
+    this.dom = domMap.get(`${state.id}`);
+    this.domMap = domMap;
     this.textMap = this.getTextMap();
     if (parent) {
       parent.children.push(this);
     }
-    state.children?.forEach(s => new Scope(app, s, this));
+    state.children?.forEach(s => new Scope(app, domMap, s, this));
   }
 
   getTextMap() {
@@ -210,13 +230,12 @@ export class Scope {
 class ScopeHandler implements ProxyHandler<any> {
   app: App;
   scope: Scope;
-  replicator?: ScopeReplicator;
 
   constructor(app: App, scope: Scope) {
     this.app = app;
     this.scope = scope;
     if (scope.state.values[DATA_VALUE]) {
-      this.replicator = new ScopeReplicator(scope, scope.state.values[DATA_VALUE]);
+      new ScopeReplicator(scope, scope.state.values[DATA_VALUE]);
     }
   }
 
@@ -320,9 +339,62 @@ class ScopeHandler implements ProxyHandler<any> {
 class ScopeReplicator {
   scope: Scope;
   value: ValueState;
+  clones: Scope[];
 
   constructor(scope: Scope, value: ValueState) {
     this.scope = scope;
     this.value = value;
+    this.clones = this.collect(scope);
+    const fn = value.fn;
+    value.fn = () => this.handle(fn?.apply(scope.obj));
   }
+
+  collect(scope: Scope): Scope[] {
+    const ret: Scope[] = [];
+    //TODO
+    return ret;
+  }
+
+  remove(i: number) {
+    const clone = this.clones.splice(i, 1)[0];
+    //TODO
+  }
+
+  handle(v: any): any {
+    const aa: any[] | null = (v instanceof Array ? this.filter(v) : null);
+    const cloneCount = (aa ? Math.max(0, aa.length - 1) : 0);
+
+    for (let i = 0; i < cloneCount; i++) {
+      if (aa && i < this.clones.length) {
+        // update existing clone
+        const clone = this.clones[i];
+        clone.obj[DATA_VALUE] = aa[i];
+      } else {
+        // add new clone
+
+      }
+    }
+    // remove obsolete clones
+    while (this.clones.length > cloneCount) {
+      this.remove(this.clones.length - 1);
+    }
+    // return data for last clone, if any
+    return v;
+  }
+
+  filter(aa: any[]) {
+    //TODO: offset, maxlen
+    return aa;
+  }
+
+  // clone(src: Scope): Scope {
+  //   const dom = src.dom?.cloneNode(true) as DomElement | undefined;
+  //   const domMap = new DomMap(dom, src.domMap);
+  //   const state: ScopeState = {};
+  //   const ret = new Scope(
+  //     src.app,
+  //     domMap,
+      
+  //   )
+  // }
 }

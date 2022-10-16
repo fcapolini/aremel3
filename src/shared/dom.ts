@@ -19,6 +19,7 @@ export interface DomNode {
   ownerDocument: DomDocument | undefined;
   parentElement: DomElement | undefined;
   nextSibling: DomNode | null;
+  cloneNode(deep: boolean): DomNode;
 }
 
 export interface DomTextNode extends DomNode {
