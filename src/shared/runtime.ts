@@ -48,8 +48,8 @@ export interface ValueState {
   // (e.g. a global or a function)
   passive?: boolean
 
-  upstream?: Set<ValueState>
-  downstream?: Set<ValueState>
+  src?: Set<ValueState>
+  dst?: Set<ValueState>
 }
 
 export interface ValuePos {
@@ -81,8 +81,10 @@ export class App {
     this.state.cycle ? (noincrement ? null : this.state.cycle++) : this.state.cycle = 1;
     delete this.pushLevel;
     MODE === 'pull' && (this.pullStack = []);
-    (scope ?? this.root).clear();
-    (scope ?? this.root).refresh();
+    scope || (scope = this.root);
+    scope.unlinkValues();
+    scope.relinkValues();
+    scope.updateValues();
     MODE === 'pull' && (delete this.pullStack);
     this.pushLevel = 0;
     return this;
@@ -197,26 +199,41 @@ export class Scope {
     return ret;
   }
 
-  clear() {
+  unlinkValues() {
     for (const [key, value] of Object.entries(this.state.values)) {
-      if (value.upstream) {
-        value.upstream.forEach(o => o?.downstream?.delete(value));
-        delete value.upstream;
+      if (value.src) {
+        value.src.forEach(o => o?.dst?.delete(value));
+        delete value.src;
       }
-      MODE === 'refs' && value.refs?.forEach(id => {
-        const other = this.lookup(id, id === key);
-        if (other && !other.passive) {
-          (value.upstream ?? (value.upstream = new Set())).add(other);
-          (other.downstream ?? (other.downstream = new Set())).add(value);
-        }
-      });
+      // MODE === 'refs' && value.refs?.forEach(id => {
+      //   const other = this.lookup(id, id === key);
+      //   if (other && !other.passive) {
+      //     (value.upstream ?? (value.upstream = new Set())).add(other);
+      //     (other.downstream ?? (other.downstream = new Set())).add(value);
+      //   }
+      // });
     }
-    this.children.forEach(s => s.clear());
+    this.children.forEach(s => s.unlinkValues());
   }
 
-  refresh() {
+  relinkValues() {
+    if (MODE === 'refs') {
+      for (const [key, value] of Object.entries(this.state.values)) {
+        MODE === 'refs' && value.refs?.forEach(id => {
+          const other = this.lookup(id, id === key);
+          if (other && !other.passive) {
+            (value.src ?? (value.src = new Set())).add(other);
+            (other.dst ?? (other.dst = new Set())).add(value);
+          }
+        });
+      }
+      this.children.forEach(s => s.relinkValues());
+    }
+  }
+
+  updateValues() {
     Object.keys(this.obj).forEach(k => this.obj[k]);
-    this.children.forEach(s => s.refresh());
+    this.children.forEach(s => s.updateValues());
   }
 
   setAttr(k: string, v: any) {
@@ -275,8 +292,8 @@ class ScopeHandler implements ProxyHandler<any> {
         if (this.app.pullStack.length > 0) {
           const o = this.app.pullStack[this.app.pullStack.length - 1];
           if (!o.passive) {
-            (value.downstream ?? (value.downstream = new Set())).add(o);
-            (o.upstream ?? (o.upstream = new Set())).add(value);
+            (value.dst ?? (value.dst = new Set())).add(o);
+            (o.src ?? (o.src = new Set())).add(value);
           }
         }
         this.app.pullStack?.push(value);
@@ -323,13 +340,13 @@ class ScopeHandler implements ProxyHandler<any> {
   }
 
   private propagate(value: ValueState) {
-    if (value.downstream && this.app.pushLevel != null) {
+    if (value.dst && this.app.pushLevel != null) {
       if ((this.app.pushLevel ?? 0) === 0) {
         this.app.state.cycle = (this.app.state.cycle ?? 0) + 1;
       }
       this.app.pushLevel++;
       try {
-        value.downstream.forEach(v => this.update(v));
+        value.dst.forEach(v => this.update(v));
       } catch (ignored: any) {}
       this.app.pushLevel--;
     }
@@ -356,11 +373,18 @@ class ScopeHandler implements ProxyHandler<any> {
     for (let i = 0; i < length - 1; i++) {
       const v = aa[i + offset];
       if (i < this.clones.length) {
-        this.updateClone(i, v);
+        // update existing clone
+        this.clones[i].obj[DATA_VALUE] = v;
       } else {
+        // create new clone
         const clone = this.cloneScope(i, v);
         this.clones.push(clone);
       }
+    }
+
+    while (this.clones.length > (length - 1)) {
+      // remove obsolete clone
+      this.deleteClone(this.clones.pop() as Scope);
     }
 
     const ret = (length > 0 ? aa[length - 1] : null);
@@ -373,7 +397,7 @@ class ScopeHandler implements ProxyHandler<any> {
     return ret;
   }
 
-  private updateClone(i: number, v: any) {
+  private deleteClone(clone: Scope) {
     //TODO
   }
 
