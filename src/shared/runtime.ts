@@ -25,10 +25,12 @@ export interface AppState {
   cycle?: number
 }
 
+export type ScopeStateValues = { [key: string]: ValueState };
+
 export interface ScopeState {
   id: string
   aka?: string
-  values: { [key: string]: ValueState }
+  values: ScopeStateValues
   children?: ScopeState[]
 }
 
@@ -40,11 +42,12 @@ export interface ValueState {
   k?: string
   v?: any
   refs?: string[]
-  upstream?: Set<ValueState>
-  downstream?: Set<ValueState>
   // indicates this value doesn't participate in reactivity
   // (e.g. a global or a function)
   passive?: boolean
+
+  upstream?: Set<ValueState>
+  downstream?: Set<ValueState>
 }
 
 export interface ValuePos {
@@ -365,13 +368,19 @@ class ScopeReplicator {
     const cloneCount = (aa ? Math.max(0, aa.length - 1) : 0);
 
     for (let i = 0; i < cloneCount; i++) {
-      if (aa && i < this.clones.length) {
-        // update existing clone
-        const clone = this.clones[i];
-        clone.obj[DATA_VALUE] = aa[i];
-      } else {
-        // add new clone
-
+      if (aa) {
+        if (i < this.clones.length) {
+          // update existing clone
+          const clone = this.clones[i];
+          clone.obj[DATA_VALUE] = aa[i];
+        } else {
+          // add new clone
+          const clone = this.clone(this.scope, i);
+          this.clones.push(clone);
+          //TODO: link
+          //TODO: Replicator replacing fn and fn being deleted by value assignment
+          clone.obj[DATA_VALUE] = aa[i];
+        }
       }
     }
     // remove obsolete clones
@@ -387,14 +396,49 @@ class ScopeReplicator {
     return aa;
   }
 
-  // clone(src: Scope): Scope {
-  //   const dom = src.dom?.cloneNode(true) as DomElement | undefined;
-  //   const domMap = new DomMap(dom, src.domMap);
-  //   const state: ScopeState = {};
-  //   const ret = new Scope(
-  //     src.app,
-  //     domMap,
-      
-  //   )
-  // }
+  clone(src: Scope, nr: number): Scope {
+    const dom = src.dom?.cloneNode(true) as DomElement | undefined;
+    dom && this.scope.dom?.parentElement?.insertBefore(dom, this.scope.dom);
+    const domMap = new DomMap(dom, src.domMap);
+    const state = this.cloneState(src.state, nr);
+    state.id && dom?.setAttribute(lang.ID_ATTR, state.id);
+    const ret = new Scope(src.app, domMap, state, src.parent);
+    return ret;
+  }
+
+  cloneState(src: ScopeState, nr?: number): ScopeState {
+    const ret: ScopeState = {
+      id: src.id + (nr != null ? `.${nr}` : ''),
+      values: this.cloneValues(src.values)
+    };
+    src.aka && (ret.aka = src.aka);
+    if (src.children) {
+      ret.children = [];
+      src.children.forEach(s => {
+        ret.children?.push(this.cloneState(s));
+      });
+    }
+    return ret;
+  }
+
+  cloneValues(src: ScopeStateValues): ScopeStateValues {
+    const ret: ScopeStateValues = {};
+    Object.keys(src).forEach(key => {
+      ret[key] = this.cloneValue(src[key]);
+    });
+    return ret;
+  }
+
+  cloneValue(src: ValueState): ValueState {
+    const ret: ValueState = {};
+    src.fn && (ret.fn = src.fn);
+    src.pos && (ret.pos = src.pos);
+    src.cycle && (ret.cycle = src.cycle);
+    src.t && (ret.t = src.t);
+    src.k && (ret.k = src.k);
+    src.v && (ret.v = src.v);
+    src.refs && (ret.refs = src.refs);
+    src.passive && (ret.passive = src.passive);
+    return ret;
+  }
 }
