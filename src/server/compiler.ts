@@ -124,6 +124,8 @@ function compileValue(
   } else if (key.startsWith(rt.TEXT_ID_PREFIX)) {
     p.push(makeProperty('t', { type: 'Literal', value: 'text'}));
     p.push(makeProperty('k', { type: 'Literal', value: key.substring(rt.TEXT_ID_PREFIX.length)}));
+  } else if (key === rt.DATA_VALUE) {
+    p.push(makeProperty('t', { type: 'Literal', value: 'data'}));
   } else if (key.startsWith(lang.EVENT_ATTR_PREFIX)) {
     key = addValueInfo(key, lang.EVENT_ATTR_PREFIX, rt.EVENT_VALUE_PREFIX, 'event', true, p);
   } else if (key.startsWith(lang.HANDLER_ATTR_PREFIX)) {

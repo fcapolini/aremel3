@@ -29,7 +29,7 @@ describe("pages", () => {
       const run = new rt.App(doc, obj);
       assert.equal(run.state.cycle ?? 0, 0);
       run.refresh();
-      assert.equal(run.state.cycle, 1);
+      assert.isTrue(run.state.cycle && run.state.cycle > 0);
       const txt = await fs.promises.readFile(
         `${ROOTPATH}/${p}${SUFFIX2}`,
         { encoding: 'utf8' }
