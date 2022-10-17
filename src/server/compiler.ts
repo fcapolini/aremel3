@@ -68,7 +68,7 @@ function makeProperty(name: string, value: es.Expression | es.Literal): es.Prope
  */
  function compileNode(node: lang.Node, app: lang.App): es.ObjectExpression {
   const p: es.Property[] = [];
-  p.push(makeProperty('id', { type: 'Literal', value: node.id }));
+  p.push(makeProperty('id', { type: 'Literal', value: `${node.id}` }));
   node.aka && p.push(makeProperty('aka', { type: 'Literal', value: node.aka }));
   p.push(makeProperty('values', compileValues(node, app)));
   if (node.children && node.children.length > 0) {

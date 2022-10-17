@@ -138,7 +138,9 @@ export class Scope {
   domMap: DomMap
   textMap?: Map<string, DomTextNode>
 
-  constructor(app: App, domMap: DomMap, state: ScopeState, parent?: Scope) {
+  constructor(
+    app: App, domMap: DomMap, state: ScopeState, parent?: Scope, before?: Scope
+  ) {
     this.app = app;
     this.state = state;
     this.parent = parent;
@@ -148,7 +150,12 @@ export class Scope {
     this.domMap = domMap;
     this.textMap = this.getTextMap();
     if (parent) {
-      parent.children.push(this);
+      const i = (before ? parent.children.indexOf(before) : -1);
+      if (i < 0) {
+        parent.children.push(this);
+      } else {
+        parent.children.splice(i, 0, this);
+      }
     }
     state.children?.forEach(s => new Scope(app, domMap, s, this));
   }
@@ -205,13 +212,6 @@ export class Scope {
         value.src.forEach(o => o?.dst?.delete(value));
         delete value.src;
       }
-      // MODE === 'refs' && value.refs?.forEach(id => {
-      //   const other = this.lookup(id, id === key);
-      //   if (other && !other.passive) {
-      //     (value.upstream ?? (value.upstream = new Set())).add(other);
-      //     (other.downstream ?? (other.downstream = new Set())).add(value);
-      //   }
-      // });
     }
     this.children.forEach(s => s.unlinkValues());
   }
@@ -410,7 +410,7 @@ class ScopeHandler implements ProxyHandler<any> {
     delete state.values[DATA_VALUE].fn;
     state.values[DATA_VALUE].v = v;
     state.id && dom?.setAttribute(lang.ID_ATTR, state.id);
-    const ret = new Scope(this.app, domMap, state, this.scope.parent);
+    const ret = new Scope(this.app, domMap, state, this.scope.parent, this.scope);
     this.app.refresh(ret, true);
     return ret;
   }

@@ -23,9 +23,9 @@ describe("compiler", () => {
     const src = generate(ast);
     assert.equal(normalizeSpace(src), normalizeSpace(`{
       root: {
-        id: 0, aka: 'page', values: {}, children: [
-          { id: 1, aka: 'head', values: {} },
-          { id: 2, aka: 'body', values: {} }
+        id: '0', aka: 'page', values: {}, children: [
+          { id: '1', aka: 'head', values: {} },
+          { id: '2', aka: 'body', values: {} }
         ]
       }
     }`));
@@ -133,11 +133,11 @@ describe("compiler", () => {
     const src = generate(ast);
     assert.equal(normalizeSpace(src), normalizeSpace(`{
       root: {
-        id: 0, aka: 'page', values: {
+        id: '0', aka: 'page', values: {
           msg: { v: 'hi' }
         }, children: [
-          { id: 1, aka: 'head', values: {} },
-          { id: 2, aka: 'body', values: {} }
+          { id: '1', aka: 'head', values: {} },
+          { id: '2', aka: 'body', values: {} }
         ]
       }
     }`));
@@ -153,11 +153,11 @@ describe("compiler", () => {
     const src = generate(ast);
     assert.equal(normalizeSpace(src), normalizeSpace(`{
       root: {
-        id: 0, aka: 'page', values: {
+        id: '0', aka: 'page', values: {
           msg: { fn: function () { return 'hi'; } }
         }, children: [
-          { id: 1, aka: 'head', values: {} },
-          { id: 2, aka: 'body', values: {} }
+          { id: '1', aka: 'head', values: {} },
+          { id: '2', aka: 'body', values: {} }
         ]
       }
     }`));
@@ -173,11 +173,11 @@ describe("compiler", () => {
     const src = generate(ast);
     assert.equal(normalizeSpace(src), normalizeSpace(`{
       root: {
-        id: 0, aka: 'page', values: {
+        id: '0', aka: 'page', values: {
           msg: { fn: function () { return this.console.log('hi'); }, refs: ['console'] }
         }, children: [
-          { id: 1, aka: 'head', values: {} },
-          { id: 2, aka: 'body', values: {} }
+          { id: '1', aka: 'head', values: {} },
+          { id: '2', aka: 'body', values: {} }
         ]
       }
     }`));
@@ -193,11 +193,11 @@ describe("compiler", () => {
     const src = generate(ast);
     assert.equal(normalizeSpace(src), normalizeSpace(`{
       root: {
-        id: 0, aka: 'page', values: {
+        id: '0', aka: 'page', values: {
           msg: { fn: function () { 'hi'; return this.console.log('hi'); }, refs: ['console'] }
         }, children: [
-          { id: 1, aka: 'head', values: {} },
-          { id: 2, aka: 'body', values: {} }
+          { id: '1', aka: 'head', values: {} },
+          { id: '2', aka: 'body', values: {} }
         ]
       }
     }`));
@@ -213,11 +213,11 @@ describe("compiler", () => {
     const src = generate(ast);
     assert.equal(normalizeSpace(src), normalizeSpace(`{
       root: {
-        id: 0, aka: 'page', values: {
+        id: '0', aka: 'page', values: {
           msg: { fn: function () { this.console.log('hi'); return 'hi'; }, refs: ['console'] }
         }, children: [
-          { id: 1, aka: 'head', values: {} },
-          { id: 2, aka: 'body', values: {} }
+          { id: '1', aka: 'head', values: {} },
+          { id: '2', aka: 'body', values: {} }
         ]
       }
     }`));
@@ -233,12 +233,12 @@ describe("compiler", () => {
     const src = generate(ast);
     assert.equal(normalizeSpace(src), normalizeSpace(`{
       root: {
-        id: 0, aka: 'page', values: {
+        id: '0', aka: 'page', values: {
           x: { fn: function () { return this.y + 1; }, refs: ['y'] },
           y: { fn: function () { return 0; } }
         }, children: [
-          { id: 1, aka: 'head', values: {} },
-          { id: 2, aka: 'body', values: {} }
+          { id: '1', aka: 'head', values: {} },
+          { id: '2', aka: 'body', values: {} }
         ]
       }
     }`));
@@ -254,9 +254,9 @@ describe("compiler", () => {
     const src = generate(ast);
     assert.equal(normalizeSpace(src), normalizeSpace(`{
       root: {
-        id: 0, aka: 'page', values: {}, children: [
-          { id: 1, aka: 'head', values: {} },
-          { id: 2, aka: 'body', values: {} }
+        id: '0', aka: 'page', values: {}, children: [
+          { id: '1', aka: 'head', values: {} },
+          { id: '2', aka: 'body', values: {} }
         ]
       }
     }`));
@@ -272,15 +272,15 @@ describe("compiler", () => {
     const src = generate(ast);
     assert.equal(normalizeSpace(src), normalizeSpace(`{
       root: {
-        id: 0, aka: 'page', values: {
+        id: '0', aka: 'page', values: {
           attr_lang: {
             t: 'attribute',
             k: 'lang',
             fn: function () { return 'en'; }
           }
         }, children: [
-          { id: 1, aka: 'head', values: {} },
-          { id: 2, aka: 'body', values: {} }
+          { id: '1', aka: 'head', values: {} },
+          { id: '2', aka: 'body', values: {} }
         ]
       }
     }`));
@@ -303,9 +303,9 @@ describe("compiler", () => {
     const src = generate(ast);
     assert.equal(normalizeSpace(src), normalizeSpace(`{
       root: {
-        id: 0, aka: 'page', values: {}, children: [
-          { id: 1, aka: 'head', values: {} },
-          { id: 2, aka: 'body', values: {} }
+        id: '0', aka: 'page', values: {}, children: [
+          { id: '1', aka: 'head', values: {} },
+          { id: '2', aka: 'body', values: {} }
         ]
       }
     }`));
@@ -330,9 +330,9 @@ describe("compiler", () => {
     const src = generate(ast);
     assert.equal(normalizeSpace(src), normalizeSpace(`{
       root: {
-        id: 0, aka: 'page', values: {}, children: [
-          { id: 1, aka: 'head', values: {} },
-          { id: 2, aka: 'body', values: {
+        id: '0', aka: 'page', values: {}, children: [
+          { id: '1', aka: 'head', values: {} },
+          { id: '2', aka: 'body', values: {
             __t$0: {
               t: 'text',
               k: '0',
