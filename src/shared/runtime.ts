@@ -66,6 +66,7 @@ export class App {
 	doc: DomDocument;
 	state: AppState;
   domMap: DomMap;
+  scopes: Map<string, Scope>;
   root: Scope;
   pullStack?: ValueState[];
   pushLevel?: number;
@@ -74,6 +75,7 @@ export class App {
     this.doc = doc;
     this.state = state;
     this.domMap = new DomMap(doc.firstElementChild);
+    this.scopes = new Map();
     this.root = new Scope(this, this.domMap, state.root);
   }
 
@@ -156,8 +158,25 @@ export class Scope {
       } else {
         parent.children.splice(i, 0, this);
       }
+      if (this.state.aka) {
+        parent.obj[this.state.aka] = this.obj;
+      }
     }
+    app.scopes.set(state.id, this);
     state.children?.forEach(s => new Scope(app, domMap, s, this));
+  }
+
+  dispose() {
+    this.app.scopes.delete(this.state.id);
+    this.unlinkValues();
+    this.dom && this.dom.parentElement && this.dom.parentElement.removeChild(this.dom);
+    const i = (this.parent ? this.parent.children.indexOf(this) : -1);
+    i >= 0 && this.parent?.children.splice(i, 1);
+    if (this.state.aka) {
+      if (this.parent && this.parent.obj[this.state.aka] === this.obj) {
+        delete this.parent.obj[this.state.aka];
+      }
+    }
   }
 
   getTextMap() {
@@ -383,8 +402,7 @@ class ScopeHandler implements ProxyHandler<any> {
     }
 
     while (this.clones.length > (length - 1)) {
-      // remove obsolete clone
-      this.deleteClone(this.clones.pop() as Scope);
+      (this.clones.pop() as Scope).dispose();
     }
 
     const ret = (length > 0 ? aa[length - 1] : null);
@@ -393,12 +411,8 @@ class ScopeHandler implements ProxyHandler<any> {
 
   private collectClones(): Scope[] {
     const ret: Scope[] = [];
-    //TODO
+    //FIXME
     return ret;
-  }
-
-  private deleteClone(clone: Scope) {
-    //TODO
   }
 
   private cloneScope(i: number, v: any) {

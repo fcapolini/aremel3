@@ -1,10 +1,9 @@
 import { assert } from "chai";
+import { HtmlDocument, HtmlElement } from "../../src/server/htmldom";
 import HtmlParser from "../../src/server/htmlparser";
 import { DomDocument } from "../../src/shared/dom";
 import * as rt from "../../src/shared/runtime";
-import * as lang from "../../src/server/lang";
 import { normalizeText } from "../../src/shared/util";
-import { HtmlDocument, HtmlElement } from "../../src/server/htmldom";
 
 function baseDoc(): DomDocument {
   return HtmlParser.parse(`<html data-aremel="0">
@@ -43,7 +42,8 @@ function replState(data: any): rt.AppState {
         { id: '2', aka: 'body', values: {}, children: [
           { id: '3', values: {
             data: { fn: function() { return data; }, t: 'data' },
-            __t$0: { fn: function() { return this.data; }, t: 'text', k: '0', refs: ['data'] }
+            __t$0: { fn: function() { return this.data; },
+                    t: 'text', k: '0', refs: ['data'] }
           } }
         ] }
       ]
@@ -237,7 +237,8 @@ describe("runtime", () => {
       normalizeText(`<html data-aremel="0">
         <head data-aremel="1"></head>
         <body data-aremel="2">
-          <p data-aremel="3.0"><!---:0-->a<!---/0--></p><p data-aremel="3"><!---:0-->b<!---/0--></p>
+          <p data-aremel="3.0"><!---:0-->a<!---/0--></p>` +
+          `<p data-aremel="3"><!---:0-->b<!---/0--></p>
         </body>
       </html>`)
     );
@@ -256,7 +257,9 @@ describe("runtime", () => {
     );
     const p = app.root.children[1].children[0];
     assert.equal(p.state.id, '3');
+    assert.equal(app.scopes.size, 4);
     p.obj['data'] = ['x'];
+    assert.equal(app.scopes.size, 4);
     assert.equal(
       normalizeText((app.doc as HtmlDocument).toString(true)),
       normalizeText(`<html data-aremel="0">
@@ -267,12 +270,27 @@ describe("runtime", () => {
       </html>`)
     );
     p.obj['data'] = ['a', 'b', 'c'];
+    assert.equal(app.scopes.size, 6);
     assert.equal(
       normalizeText((app.doc as HtmlDocument).toString(true)),
       normalizeText(`<html data-aremel="0">
         <head data-aremel="1"></head>
         <body data-aremel="2">
-          <p data-aremel=\"3.0\"><!---:0-->a<!---/0--></p><p data-aremel=\"3.1\"><!---:0-->b<!---/0--></p><p data-aremel=\"3\"><!---:0-->c<!---/0--></p>
+          <p data-aremel=\"3.0\"><!---:0-->a<!---/0--></p>` +
+          `<p data-aremel=\"3.1\"><!---:0-->b<!---/0--></p>` +
+          `<p data-aremel=\"3\"><!---:0-->c<!---/0--></p>
+        </body>
+      </html>`)
+    );
+    p.obj['data'] = ['a', 'b'];
+    assert.equal(app.scopes.size, 5);
+    assert.equal(
+      normalizeText((app.doc as HtmlDocument).toString(true)),
+      normalizeText(`<html data-aremel="0">
+        <head data-aremel="1"></head>
+        <body data-aremel="2">
+          <p data-aremel=\"3.0\"><!---:0-->a<!---/0--></p>` +
+          `<p data-aremel=\"3\"><!---:0-->b<!---/0--></p>
         </body>
       </html>`)
     );
