@@ -4,7 +4,7 @@ import { DomDocument } from "../../src/shared/dom";
 import * as rt from "../../src/shared/runtime";
 import * as lang from "../../src/server/lang";
 import { normalizeText } from "../../src/shared/util";
-import { HtmlElement } from "../../src/server/htmldom";
+import { HtmlDocument, HtmlElement } from "../../src/server/htmldom";
 
 function baseDoc(): DomDocument {
   return HtmlParser.parse(`<html data-aremel="0">
@@ -20,6 +20,32 @@ function baseState(): rt.AppState {
       children: [
         { id: '1', aka: 'head', values: {} },
         { id: '2', aka: 'body', values: {} }
+      ]
+    }
+  };
+}
+
+function replDoc(): DomDocument {
+  return HtmlParser.parse(`<html data-aremel="0">
+    <head data-aremel="1"></head>
+    <body data-aremel="2">
+      <p data-aremel="3"><!---:0--><!---/0--></p>
+    </body>
+  </html>`, false) as DomDocument;
+}
+
+function replState(data: any): rt.AppState {
+  return {
+    root: {
+      id: '0', aka: 'page', values: {},
+      children: [
+        { id: '1', aka: 'head', values: {} },
+        { id: '2', aka: 'body', values: {}, children: [
+          { id: '3', values: {
+            data: { fn: function() { return data; }, t: 'data' },
+            __t$0: { fn: function() { return this.data; }, t: 'text', k: '0', refs: ['data'] }
+          } }
+        ] }
       ]
     }
   };
@@ -161,6 +187,93 @@ describe("runtime", () => {
       normalizeText(`<html data-aremel="0">
         <head data-aremel="1"></head>
         <body data-aremel="2">Hello <!---:0-->Bob<!---/0-->!</body>
+      </html>`)
+    );
+  });
+
+  it(`replication 1`, async () => {
+    const app = new rt.App(replDoc(), replState(null)).refresh();
+    assert.equal(
+      normalizeText((app.doc as HtmlDocument).toString(true)),
+      normalizeText(`<html data-aremel="0">
+        <head data-aremel="1"></head>
+        <body data-aremel="2">
+          <p data-aremel="3"><!---:0--><!---/0--></p>
+        </body>
+      </html>`)
+    );
+  });
+
+  it(`replication 2`, async () => {
+    const app = new rt.App(replDoc(), replState([])).refresh();
+    assert.equal(
+      normalizeText((app.doc as HtmlDocument).toString(true)),
+      normalizeText(`<html data-aremel="0">
+        <head data-aremel="1"></head>
+        <body data-aremel="2">
+          <p data-aremel="3"><!---:0--><!---/0--></p>
+        </body>
+      </html>`)
+    );
+  });
+
+  it(`replication 3`, async () => {
+    const app = new rt.App(replDoc(), replState(['a'])).refresh();
+    assert.equal(
+      normalizeText((app.doc as HtmlDocument).toString(true)),
+      normalizeText(`<html data-aremel="0">
+        <head data-aremel="1"></head>
+        <body data-aremel="2">
+          <p data-aremel="3"><!---:0-->a<!---/0--></p>
+        </body>
+      </html>`)
+    );
+  });
+
+  it(`replication 4`, async () => {
+    const app = new rt.App(replDoc(), replState(['a', 'b'])).refresh();
+    assert.equal(
+      normalizeText((app.doc as HtmlDocument).toString(true)),
+      normalizeText(`<html data-aremel="0">
+        <head data-aremel="1"></head>
+        <body data-aremel="2">
+          <p data-aremel="3.0"><!---:0-->a<!---/0--></p><p data-aremel="3"><!---:0-->b<!---/0--></p>
+        </body>
+      </html>`)
+    );
+  });
+
+  it(`replication 10`, async () => {
+    const app = new rt.App(replDoc(), replState(null)).refresh();
+    assert.equal(
+      normalizeText((app.doc as HtmlDocument).toString(true)),
+      normalizeText(`<html data-aremel="0">
+        <head data-aremel="1"></head>
+        <body data-aremel="2">
+          <p data-aremel="3"><!---:0--><!---/0--></p>
+        </body>
+      </html>`)
+    );
+    const p = app.root.children[1].children[0];
+    assert.equal(p.state.id, '3');
+    p.obj['data'] = ['x'];
+    assert.equal(
+      normalizeText((app.doc as HtmlDocument).toString(true)),
+      normalizeText(`<html data-aremel="0">
+        <head data-aremel="1"></head>
+        <body data-aremel="2">
+          <p data-aremel="3"><!---:0-->x<!---/0--></p>
+        </body>
+      </html>`)
+    );
+    p.obj['data'] = ['a', 'b', 'c'];
+    assert.equal(
+      normalizeText((app.doc as HtmlDocument).toString(true)),
+      normalizeText(`<html data-aremel="0">
+        <head data-aremel="1"></head>
+        <body data-aremel="2">
+          <p data-aremel=\"3.0\"><!---:0-->a<!---/0--></p><p data-aremel=\"3.1\"><!---:0-->b<!---/0--></p><p data-aremel=\"3\"><!---:0-->c<!---/0--></p>
+        </body>
       </html>`)
     );
   });

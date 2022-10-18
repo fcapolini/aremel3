@@ -61,26 +61,4 @@ describe("pages", () => {
       );
     });
   });
-
-  it(`replication - add clones`, async () => {
-    const run = await loadPage('replication.html');
-    run.refresh();
-    assert.equal(
-      normalizeSpace((run.doc as HtmlDocument).toString(true)),
-      normalizeSpace(`<!DOCTYPE html>
-      <html data-aremel="0">
-        <head data-aremel="1">
-        </head>
-        <body data-aremel="2">
-          <ul>
-            <li data-aremel="3.0">data: <!---:1-->a<!---/1--></li>` +
-            `<li data-aremel="3.1">data: <!---:1-->b<!---/1--></li>` +
-            `<li data-aremel="3">data: <!---:1-->c<!---/1--></li>
-          </ul>
-        </body>
-      </html>
-      `)
-    );
-    const li = getScope(run, '3');
-  });
 });

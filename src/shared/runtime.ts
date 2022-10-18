@@ -359,7 +359,7 @@ class ScopeHandler implements ProxyHandler<any> {
 
   private replicateFor(value: ValueState): any {
     let v = value.v;
-    if (!(v instanceof Array)) {
+    if (!(v instanceof Array) || v.length < 1) {
       return v;
     }
     if (!this.clones) {
@@ -402,7 +402,7 @@ class ScopeHandler implements ProxyHandler<any> {
   }
 
   private cloneScope(i: number, v: any) {
-    const state = this.cloneState(this.scope.state, i);
+    const state = this.cloneState(this.scope.state, i, true);
     const dom = this.scope.dom?.cloneNode(true) as DomElement | undefined;
     dom && dom.setAttribute(lang.ID_ATTR, state.id);
     dom && this.scope.dom?.parentElement?.insertBefore(dom, this.scope.dom);
@@ -415,34 +415,34 @@ class ScopeHandler implements ProxyHandler<any> {
     return ret;
   }
 
-  cloneState(src: ScopeState, i?: number): ScopeState {
+  cloneState(src: ScopeState, i: number | undefined, clearCycle: boolean): ScopeState {
     const ret: ScopeState = {
       id: (i != null ? `${src.id}.${i}` : src.id),
-      values: this.cloneValues(src.values)
+      values: this.cloneValues(src.values, clearCycle)
     };
     src.aka && (ret.aka = src.aka);
     if (src.children) {
       ret.children = [];
       src.children.forEach(s => {
-        ret.children?.push(this.cloneState(s));
+        ret.children?.push(this.cloneState(s, undefined, clearCycle));
       });
     }
     return ret;
   }
 
-  cloneValues(src: ScopeStateValues): ScopeStateValues {
+  cloneValues(src: ScopeStateValues, clearCycle: boolean): ScopeStateValues {
     const ret: ScopeStateValues = {};
     Object.keys(src).forEach(key => {
-      ret[key] = this.cloneValue(src[key]);
+      ret[key] = this.cloneValue(src[key], clearCycle);
     });
     return ret;
   }
 
-  cloneValue(src: ValueState): ValueState {
+  cloneValue(src: ValueState, clearCycle: boolean): ValueState {
     const ret: ValueState = {};
     src.fn && (ret.fn = src.fn);
     src.pos && (ret.pos = src.pos);
-    src.cycle && (ret.cycle = src.cycle);
+    !clearCycle && src.cycle && (ret.cycle = src.cycle);
     src.t && (ret.t = src.t);
     src.k && (ret.k = src.k);
     src.v && (ret.v = src.v);

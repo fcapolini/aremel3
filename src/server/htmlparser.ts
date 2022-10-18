@@ -7,27 +7,30 @@ const HTML_EXTENSIONS = true;
 export default class HtmlParser {
   origins: Array<string>;
   
-  static parse(s: string): HtmlDocument {
-    return new HtmlParser().parseDoc(s);
+  static parse(s: string, stripTriComments = true): HtmlDocument {
+    return new HtmlParser().parseDoc(s, undefined, stripTriComments);
   }
 
   constructor() {
     this.origins = [];
   }
 
-  parseDoc(s: string, fname?: string): HtmlDocument {
+  parseDoc(s: string, fname?: string, stripTriComments = true): HtmlDocument {
     fname = (fname ? fname : ORIGIN_LITERAL);
     var origin = this.origins.length;
     this.origins.push(fname);
     var ret = new HtmlDocument(origin);
-    var i = this.parseNodes(ret, s, 0, origin);
+    var i = this.parseNodes(ret, s, 0, origin, stripTriComments);
     if (i < s.length) {
       new HtmlText(ret, ret, s.substring(i), i, s.length, origin);
     }
     return ret;
   }
 
-  private parseNodes(p: HtmlElement, s: string, i1: number, origin: number) {
+  private parseNodes(
+    p: HtmlElement, s: string, i1: number, origin: number,
+    stripTriComments: boolean
+  ) {
     var i2, closure, i3 = i1, i4, closetag = null;
     while ((i2 = s.indexOf('<', i1)) >= 0) {
       i4 = i2;
@@ -59,7 +62,7 @@ export default class HtmlParser {
           }
           i1 = i2;
         } else {
-          i1 = this.parseElement(p, s, i1, i2, origin);
+          i1 = this.parseElement(p, s, i1, i2, origin, stripTriComments);
         }
         i3 = i1;
       } else if (!closure && (i2 = this.skipComment(s, i1, origin)) > i1) {
@@ -67,7 +70,7 @@ export default class HtmlParser {
           new HtmlText(p.ownerDocument as HtmlDocument, p, s.substring(i3, i4),
                 i3, i4, origin, false);
         }
-        if (s.charCodeAt(i1 + 3) != '-'.charCodeAt(0)) {
+        if (!stripTriComments || s.charCodeAt(i1 + 3) != '-'.charCodeAt(0)) {
           // if it doesn't start with `<!---`, store the comment
           //TODO: this may result in adjacent text nodes
           //TODO: make it more robust
@@ -86,7 +89,8 @@ export default class HtmlParser {
 
   private parseElement(
     p: HtmlElement, s: string,
-    i1: number, i2: number, origin: number
+    i1: number, i2: number, origin: number,
+    stripTriComments: boolean
   ): number {
     var e = new HtmlElement(p.ownerDocument as HtmlDocument, p, s.substring(i1, i2), i1, i2, origin);
     i1 = this.parseAttributes(e, s, i2, origin);
@@ -117,7 +121,7 @@ export default class HtmlParser {
         }
         i1 = res.i2;
       } else {
-        i1 = this.parseNodes(e, s, i1, origin);
+        i1 = this.parseNodes(e, s, i1, origin, stripTriComments);
       }
     }
     e.pos.i2 = i1;
