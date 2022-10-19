@@ -48,18 +48,18 @@ describe('delivery', () => {
         normalizeSpace(cachedPage).trim()
       );
       // page change
-      // app.root.obj.change = 1;
-      // const changePage = await fs.promises.readFile(
-      //   `${ROOTPATH}/${p}${CHANGE_SUFFIX}`,
-      //   { encoding: 'utf8' }
-      // );
-      // assert.equal(
-      //   normalizeSpace(jsdom.serialize()
-      //     .replace('><html', '>\n<html')
-      //     .replace('><head', '>\n<head')
-      //     .replace('></html>', '>\n</html>')).trim(),
-      //   normalizeSpace(changePage).trim()
-      // );
+      app.root.obj.change = 1;
+      const changePage = await fs.promises.readFile(
+        `${ROOTPATH}/${p}${CHANGE_SUFFIX}`,
+        { encoding: 'utf8' }
+      );
+      assert.equal(
+        normalizeSpace(jsdom.serialize()
+          .replace('><html', '>\n<html')
+          .replace('><head', '>\n<head')
+          .replace('></html>', '>\n</html>')).trim(),
+        normalizeSpace(changePage).trim()
+      );
     });
   });
 

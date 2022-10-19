@@ -1,8 +1,6 @@
 import { COMMENT_NODE, DomDocument, DomElement, DomTextNode, ELEMENT_NODE, TEXT_NODE } from "./dom";
 import * as lang from "../server/lang";
 
-const MODE: 'pull' | 'refs' = 'refs';
-
 export const ID_ATTR = 'data-aremel';
 export const STATE_GLOBAL = '__aremel_state__';
 
@@ -53,6 +51,7 @@ export interface ValueState {
 
   src?: Set<ValueState>
   dst?: Set<ValueState>
+  scope?: Scope
 }
 
 export interface ValuePos {
@@ -71,7 +70,6 @@ export class App {
   domMap: DomMap;
   scopes: Map<string, Scope>;
   root: Scope;
-  pullStack?: ValueState[];
   pushLevel?: number;
 
   constructor(doc: DomDocument, state: AppState) {
@@ -85,12 +83,10 @@ export class App {
   refresh(scope?: Scope, noincrement?: boolean) {
     this.state.cycle ? (noincrement ? null : this.state.cycle++) : this.state.cycle = 1;
     delete this.pushLevel;
-    MODE === 'pull' && (this.pullStack = []);
     scope || (scope = this.root);
     scope.unlinkValues();
     scope.relinkValues();
     scope.updateValues();
-    MODE === 'pull' && (delete this.pullStack);
     this.pushLevel = 0;
     return this;
   }
@@ -239,18 +235,17 @@ export class Scope {
   }
 
   relinkValues() {
-    if (MODE === 'refs') {
-      for (const [key, value] of Object.entries(this.state.values)) {
-        MODE === 'refs' && value.refs?.forEach(id => {
-          const other = this.lookup(id, id === key);
-          if (other && !other.passive) {
-            (value.src ?? (value.src = new Set())).add(other);
-            (other.dst ?? (other.dst = new Set())).add(value);
-          }
-        });
-      }
-      this.children.forEach(s => s.relinkValues());
+    for (const [key, value] of Object.entries(this.state.values)) {
+      value.scope = this;
+      value.refs?.forEach(id => {
+        const other = this.lookup(id, id === key);
+        if (other && !other.passive) {
+          (value.src ?? (value.src = new Set())).add(other);
+          (other.dst ?? (other.dst = new Set())).add(value);
+        }
+      });
     }
+    this.children.forEach(s => s.relinkValues());
   }
 
   updateValues() {
@@ -310,17 +305,6 @@ class ScopeHandler implements ProxyHandler<any> {
 
   private update(value: ValueState) {
     if (value) {
-      if (MODE === 'pull' && this.app.pullStack) {
-        if (this.app.pullStack.length > 0) {
-          const o = this.app.pullStack[this.app.pullStack.length - 1];
-          if (!o.passive) {
-            (value.dst ?? (value.dst = new Set())).add(o);
-            (o.src ?? (o.src = new Set())).add(value);
-          }
-        }
-        this.app.pullStack?.push(value);
-      }
-      
       if (value.fn) {
         if (!value.cycle || value.cycle < (this.app.state.cycle ?? 0)) {
           value.cycle = this.app.state.cycle ?? 0;
@@ -339,10 +323,6 @@ class ScopeHandler implements ProxyHandler<any> {
           }
         }
       }
-
-      if (MODE === 'pull' && this.app.pullStack) {
-        this.app.pullStack?.pop();
-      }
     }
   }
 
@@ -352,7 +332,7 @@ class ScopeHandler implements ProxyHandler<any> {
         value.k && this.scope.setAttr(value.k, value.v);
         break;
       case 'text':
-        const t = value.k && this.scope.textMap?.get(value.k);
+        const t = value.k && value.scope?.textMap?.get(value.k);
         //TODO: HTML encoding/decoding?
         t ? t.nodeValue = `${value.v != null ? value.v : ''}` : null;
         break;
