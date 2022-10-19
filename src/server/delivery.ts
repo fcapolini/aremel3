@@ -30,6 +30,7 @@ export default class Delivery {
         `);
         script.appendChild(text);
         doc.body?.appendChild(script);
+        doc.body?.appendChild(doc.createTextNode('\n'));
         const out = (doc as HtmlDocument).toString(sort);
         resolve(out);
       } catch (ex: any) {
