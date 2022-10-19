@@ -368,6 +368,23 @@ export class HtmlElement extends HtmlNode implements DomElement {
   }
   removeEventListener(t: string, l: (ev: any) => void) { }
 
+  scan(cb: (n: HtmlElement) => boolean, recursive: boolean): HtmlElement | undefined {
+    for (const n of this.children) {
+      if (n.nodeType === ELEMENT_NODE) {
+        if (cb(n as HtmlElement)) {
+          return n as HtmlElement;
+        }
+        if (recursive) {
+          const ret = (n as HtmlElement).scan(cb, true);
+          if (ret) {
+            return ret;
+          }
+        }
+      }      
+    }
+    return undefined;
+  }
+
   // ===================================================================================
   // private
   // ===================================================================================
@@ -393,6 +410,20 @@ export class HtmlDocument extends HtmlElement implements DomDocument {
     super(undefined, undefined, "#document", 0, 0, origin);
     this.ownerDocument = this;
     this.selfclose = true;
+  }
+
+  get head(): DomElement | undefined {
+    return (this.firstElementChild as HtmlElement | undefined)?.scan(
+      e => e.tagName === 'HEAD',
+      false
+    );
+  }
+
+  get body(): DomElement | undefined {
+    return (this.firstElementChild as HtmlElement | undefined)?.scan(
+      e => e.tagName === 'BODY',
+      false
+    );
   }
 
   createElement(tagName: string): DomElement {

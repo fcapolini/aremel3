@@ -62,6 +62,8 @@ export interface DomElement extends DomNode {
 
 // https://developer.mozilla.org/en-US/docs/Web/API/Document
 export interface DomDocument extends DomNode {
+  get head(): DomElement | undefined;
+  get body(): DomElement | undefined;
   createElement: (tagName: string) => DomElement;
   createComment: (text: string) => DomComment;
   createTextNode: (text: string) => DomTextNode;

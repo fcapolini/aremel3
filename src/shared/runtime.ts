@@ -3,6 +3,9 @@ import * as lang from "../server/lang";
 
 const MODE: 'pull' | 'refs' = 'refs';
 
+export const ID_ATTR = 'data-aremel';
+export const STATE_GLOBAL = '__aremel_state__';
+
 export const TEXT_ID_PREFIX = '__t$';
 export const TEXT_COMMENT1 = '-:';
 export const TEXT_COMMENT1_LEN = TEXT_COMMENT1.length;
@@ -106,7 +109,7 @@ class DomMap {
     const map = this.map = new Map();
 
     function f(e: DomElement) {
-      const id = e.getAttribute(lang.ID_ATTR);
+      const id = e.getAttribute(ID_ATTR);
       id && map.set(id, e);
       e.childNodes.forEach(n => n.nodeType === ELEMENT_NODE && f(n as DomElement));
     }
@@ -201,7 +204,7 @@ export class Scope {
             }
           }
         } else if (n.nodeType === ELEMENT_NODE) {
-          if (!(n as DomElement).getAttribute(lang.ID_ATTR)) {
+          if (!(n as DomElement).getAttribute(ID_ATTR)) {
             f(n as DomElement);
           }
         }
@@ -418,12 +421,12 @@ class ScopeHandler implements ProxyHandler<any> {
   private cloneScope(i: number, v: any) {
     const state = this.cloneState(this.scope.state, i, true);
     const dom = this.scope.dom?.cloneNode(true) as DomElement | undefined;
-    dom && dom.setAttribute(lang.ID_ATTR, state.id);
+    dom && dom.setAttribute(ID_ATTR, state.id);
     dom && this.scope.dom?.parentElement?.insertBefore(dom, this.scope.dom);
     const domMap = new DomMap(dom, this.scope.domMap);
     delete state.values[DATA_VALUE].fn;
     state.values[DATA_VALUE].v = v;
-    state.id && dom?.setAttribute(lang.ID_ATTR, state.id);
+    state.id && dom?.setAttribute(ID_ATTR, state.id);
     const ret = new Scope(this.app, domMap, state, this.scope.parent, this.scope);
     this.app.refresh(ret, true);
     return ret;

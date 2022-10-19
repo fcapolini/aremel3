@@ -59,7 +59,7 @@ function loadNode(
     props: new Map()
   };
 
-  dom.setAttribute(lang.ID_ATTR, `${ret.id}`);
+  dom.setAttribute(rt.ID_ATTR, `${ret.id}`);
   const roots = loadNodeProps(ret, pre, err, []);
   roots.forEach(dom => {
     const child = loadNode(dom, pre, err, ctx, ret);

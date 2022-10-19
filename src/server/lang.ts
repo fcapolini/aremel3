@@ -1,7 +1,6 @@
 import { HtmlDocument, HtmlElement, HtmlText } from "./htmldom";
 import Preprocessor, { SourcePos } from "./preprocessor";
 
-export const ID_ATTR = 'data-aremel';
 export const LOGIC_ATTR_PREFIX = ':';
 export const AKA_ATTR = LOGIC_ATTR_PREFIX + 'aka';
 export const EXPR_ATTR_QUOTE = '[';
