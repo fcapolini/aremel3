@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html data-aremel="0">
+<head data-aremel="1">
+</head>
+<body data-aremel="2">
+  <p data-aremel="3">value: <!---:1--><!---/1--></p>
+<script>
+  window['__aremel_state__'] = {
+    root: {
+      id: '0',
+      aka: 'page',
+      values: {
+        change: { fn: function () { return 0; } }
+      },
+      children: [
+        {
+          id: '1',
+          aka: 'head',
+          values: {}
+        },
+        {
+          id: '2',
+          aka: 'body',
+          values: {},
+          children: [{
+            id: '3',
+            values: {
+              data: { t: 'data', fn: function () { return this.change ? [ 'a', 'b', 'c' ] : null; }, refs: ['change'] },
+              __t$1: { t: 'text', k: '1', fn: function () { return this.data; }, refs: ['data'] }
+            }
+          }]
+        }
+      ]
+    }
+  };
+</script>
+</body>
+</html>

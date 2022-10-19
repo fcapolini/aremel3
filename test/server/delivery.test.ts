@@ -22,6 +22,7 @@ describe('delivery', () => {
     it(p, async () => {
       // server page
       const outputPage = await delivery.fromSource(p + SOURCE_SUFFIX, true);
+      // console.log(outputPage);
       // cached page
       const cachedPage = await fs.promises.readFile(
         `${ROOTPATH}/${p}${CACHED_SUFFIX}`,

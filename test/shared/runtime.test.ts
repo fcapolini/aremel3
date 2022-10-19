@@ -69,6 +69,7 @@ describe("runtime", () => {
     const state = baseState();
     state.root.values['v'] = { fn: () => 1 };
     const app = new rt.App(doc, state);
+    app.refresh();
     assert.equal(app.root.obj.v, 1);
     app.root.obj.v = 2;
     assert.equal(app.root.state.values['v'].v, 2);

@@ -134,6 +134,7 @@ export class Scope {
 	state: ScopeState
 	parent?: Scope
 	children: Scope[]
+  handler: ScopeHandler
 	obj: any
   dom?: DomElement
   domMap: DomMap
@@ -146,7 +147,8 @@ export class Scope {
     this.state = state;
     this.parent = parent;
     this.children = [];
-    this.obj = new Proxy<any>(this.state.values, new ScopeHandler(app, this))
+    this.handler = new ScopeHandler(app, this);
+    this.obj = new Proxy<any>(this.state.values, this.handler);
     this.dom = domMap.get(`${state.id}`);
     this.domMap = domMap;
     this.textMap = this.getTextMap();
@@ -311,7 +313,7 @@ class ScopeHandler implements ProxyHandler<any> {
           const old = value.v;
 
           try {
-            value.v = value.fn.apply(this.scope.obj);
+            value.v = value.fn.apply((value.scope as Scope).obj);
           } catch (ex: any) {
             //TODO (+ use ValueState.pos if available)
             console.log(ex);
@@ -329,7 +331,7 @@ class ScopeHandler implements ProxyHandler<any> {
   private reflect(value: ValueState) {
     switch (value.t) {
       case 'attribute':
-        value.k && this.scope.setAttr(value.k, value.v);
+        value.k && value.scope?.setAttr(value.k, value.v);
         break;
       case 'text':
         const t = value.k && value.scope?.textMap?.get(value.k);
@@ -337,7 +339,7 @@ class ScopeHandler implements ProxyHandler<any> {
         t ? t.nodeValue = `${value.v != null ? value.v : ''}` : null;
         break;
       case 'data':
-        value.v = this.replicateFor(value);
+        value.v = value.scope?.handler.replicateFor(value);
     }
   }
 
@@ -361,7 +363,7 @@ class ScopeHandler implements ProxyHandler<any> {
 
   private replicateFor(value: ValueState): any {
     let v = value.v;
-    if (!(v instanceof Array) || v.length < 1) {
+    if (!(Array.isArray(v)) || v.length < 1) {
       return v;
     }
     if (!this.clones) {
