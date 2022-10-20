@@ -285,6 +285,7 @@ export class Scope {
         // create new clone
         const state = this.cloneState(this.state, i, true);
         delete state.values[DATA_VALUE].fn;
+        delete state.values[DATA_VALUE].t;
         state.values[DATA_VALUE].v = v;
         const dom = this.cloneDom(state.id);
         const clone = this.cloneScope(dom, state);
@@ -313,9 +314,11 @@ export class Scope {
             const i = parseInt(id.substring(`${this.state.id}.`.length));
             const state = this.cloneState(this.state, i, true);
             delete state.values[DATA_VALUE].fn;
+            delete state.values[DATA_VALUE].t;
             state.values[DATA_VALUE].v = undefined;
             const dom = n as DomElement;
             const clone = this.cloneScope(dom, state);
+            clone.relinkValues();
             ret.push(clone);
           }
         }
@@ -459,7 +462,10 @@ class ScopeHandler implements ProxyHandler<any> {
       }
       this.app.pushLevel++;
       try {
-        (value.dst as Set<ValueState>).forEach(v => this.update(v));
+        const that = this;
+        (value.dst as Set<ValueState>).forEach(function(v) {
+          that.update(v);
+        });
       } catch (ignored: any) {}
       this.app.pushLevel--;
     }
