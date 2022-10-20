@@ -267,10 +267,7 @@ export class Scope {
   clones: Scope[] | undefined;
 
   replicateFor(value: ValueState): any {
-    let v = value.v;
-    if (!(Array.isArray(v)) || v.length < 1) {
-      return v;
-    }
+    let v = Array.isArray(value.v) ? value.v : [];
     if (!this.clones) {
       this.clones = this.collectClones();
     }
@@ -286,12 +283,18 @@ export class Scope {
         this.clones[i].obj[DATA_VALUE] = v;
       } else {
         // create new clone
-        const clone = this.cloneScope(i, v);
+        const state = this.cloneState(this.state, i, true);
+        delete state.values[DATA_VALUE].fn;
+        state.values[DATA_VALUE].v = v;
+        const dom = this.cloneDom(state.id);
+        const clone = this.cloneScope(dom, state);
+        this.app.refresh(clone, true);
         this.clones.push(clone);
       }
     }
 
-    while (this.clones.length > (length - 1)) {
+    const maxClones = Math.max(0, length - 1);
+    while (this.clones.length > maxClones) {
       (this.clones.pop() as Scope).dispose();
     }
 
@@ -301,21 +304,37 @@ export class Scope {
 
   private collectClones(): Scope[] {
     const ret: Scope[] = [];
+    const re = new RegExp(`^${this.state.id.replace('.', '\\.')}\\.\\d+$`);
+    if (this.dom && this.dom.parentElement) {
+      this.dom.parentElement.childNodes.forEach(n => {
+        if (n.nodeType === ELEMENT_NODE) {
+          const id = (n as DomElement).getAttribute(ID_ATTR);
+          if (id !== undefined && re.test(id)) {
+            const i = parseInt(id.substring(`${this.state.id}.`.length));
+            const state = this.cloneState(this.state, i, true);
+            delete state.values[DATA_VALUE].fn;
+            state.values[DATA_VALUE].v = undefined;
+            const dom = n as DomElement;
+            const clone = this.cloneScope(dom, state);
+            ret.push(clone);
+          }
+        }
+      });
+    }
     //FIXME
     return ret;
   }
 
-  private cloneScope(i: number, v: any) {
-    const state = this.cloneState(this.state, i, true);
+  private cloneDom(id: string) {
     const dom = this.dom?.cloneNode(true) as DomElement | undefined;
-    dom && dom.setAttribute(ID_ATTR, state.id);
+    dom && dom.setAttribute(ID_ATTR, id);
     dom && this.dom?.parentElement?.insertBefore(dom, this.dom);
+    return dom;
+  }
+
+  private cloneScope(dom: DomElement | undefined, state: ScopeState) {
     const domMap = new DomMap(dom, this.domMap);
-    delete state.values[DATA_VALUE].fn;
-    state.values[DATA_VALUE].v = v;
-    state.id && dom?.setAttribute(ID_ATTR, state.id);
     const ret = new Scope(this.app, domMap, state, this.parent, this);
-    this.app.refresh(ret, true);
     return ret;
   }
 
