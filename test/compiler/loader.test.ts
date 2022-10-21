@@ -1,13 +1,13 @@
 import { assert } from "chai";
-import { HtmlDocument } from "../../src/server/htmldom";
-import { load } from "../../src/server/loader";
-import * as l from "../../src/server/lang";
+import { HtmlDocument } from "../../src/compiler/htmldom";
+import { load } from "../../src/compiler/loader";
+import * as l from "../../src/compiler/lang";
 import * as r from "../../src/shared/runtime";
-import Preprocessor from "../../src/server/preprocessor";
+import Preprocessor from "../../src/compiler/preprocessor";
 import { DomDocument } from "../../src/shared/dom";
 import { normalizeText } from "../../src/shared/util";
 
-const preprocessor = new Preprocessor(process.cwd() + '/test/server/loader');
+const preprocessor = new Preprocessor(process.cwd() + '/test/compiler/loader');
 
 describe("loader", () => {
 

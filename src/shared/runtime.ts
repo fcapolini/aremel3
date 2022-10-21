@@ -1,6 +1,6 @@
 import { COMMENT_NODE, DomDocument, DomElement, DomTextNode, ELEMENT_NODE, TEXT_NODE } from "./dom";
-import * as lang from "../server/lang";
 
+export const RESERVED_PREFIX = '__';
 export const ID_ATTR = 'data-aremel';
 export const STATE_GLOBAL = '__aremel_state__';
 
@@ -9,8 +9,8 @@ export const TEXT_COMMENT1 = '-:';
 export const TEXT_COMMENT1_LEN = TEXT_COMMENT1.length;
 export const TEXT_COMMENT2 = '-/';
 
-export const NOTNULL_FN = lang.RESERVED_PREFIX + 'nn';
-export const OUTER_PROPERTY = lang.RESERVED_PREFIX + 'outer';
+export const NOTNULL_FN = RESERVED_PREFIX + 'nn';
+export const OUTER_PROPERTY = RESERVED_PREFIX + 'outer';
 export const ATTR_VALUE_PREFIX = 'attr_';
 export const EVENT_VALUE_PREFIX = 'event_';
 export const HANDLER_VALUE_PREFIX = 'on_';
@@ -324,7 +324,6 @@ export class Scope {
         }
       });
     }
-    //FIXME
     return ret;
   }
 
@@ -401,7 +400,7 @@ class ScopeHandler implements ProxyHandler<any> {
   }
 
   set(target: any, prop: string, val: any, receiver?: any) {
-    if (prop.startsWith(lang.RESERVED_PREFIX)) {
+    if (prop.startsWith(RESERVED_PREFIX)) {
       return false;
     }
     const value = this.scope.lookup(prop);

@@ -1,7 +1,7 @@
 import { assert } from "chai";
 import { generate } from "escodegen";
 import { parseScript } from "esprima";
-import { makeValueFunction } from "../../src/server/code";
+import { makeValueFunction } from "../../src/compiler/code";
 import { normalizeSpace } from "../../src/shared/util";
 
 describe("code", () => {

@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import HtmlParser from "../../src/server/htmlparser";
+import HtmlParser from "../../src/compiler/htmlparser";
 import { normalizeText } from "../../src/shared/util";
 
 describe('htmldom', () => {

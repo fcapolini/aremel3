@@ -1,11 +1,11 @@
 import { assert } from "chai";
 import { generate } from "escodegen";
-import { compileApp } from "../../src/server/compiler";
-import { load } from "../../src/server/loader";
-import Preprocessor from "../../src/server/preprocessor";
+import { compileApp } from "../../src/compiler/compiler";
+import { load } from "../../src/compiler/loader";
+import Preprocessor from "../../src/compiler/preprocessor";
 import { normalizeSpace } from "../../src/shared/util";
 
-const ROOTPATH = process.cwd() + '/test/server/compiler';
+const ROOTPATH = process.cwd() + '/test/compiler/compiler';
 
 describe("compiler", () => {
 

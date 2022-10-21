@@ -1,12 +1,12 @@
 import { assert } from "chai";
 import fs from "fs";
 import { JSDOM } from "jsdom";
-import Delivery from "../../src/server/delivery";
+import Delivery from "../../src/compiler/delivery";
 import { DomDocument } from "../../src/shared/dom";
 import * as rt from "../../src/shared/runtime";
 import { normalizeSpace, normalizeText } from "../../src/shared/util";
 
-const ROOTPATH = process.cwd() + '/test/server/delivery';
+const ROOTPATH = process.cwd() + '/test/compiler/delivery';
 const SOURCE_SUFFIX = '.source.html';
 const CACHED_SUFFIX = '.cached.html';
 const CHANGE_SUFFIX = '.change.html';

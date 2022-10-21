@@ -1,10 +1,10 @@
 import fs from "fs";
 import { assert } from "chai";
-import { HtmlDocument, HtmlElement } from '../../src/server/htmldom';
+import { HtmlDocument, HtmlElement } from '../../src/compiler/htmldom';
 import { COMMENT_NODE, ELEMENT_NODE, TEXT_NODE } from "../../src/shared/dom";
-import HtmlParser, { HtmlException } from "../../src/server/htmlparser";
+import HtmlParser, { HtmlException } from "../../src/compiler/htmlparser";
 
-const rootPath = process.cwd() + '/test/server/htmlparser';
+const rootPath = process.cwd() + '/test/compiler/htmlparser';
 
 function countNodes(doc:HtmlDocument): any {
   var ret = {elements: 0, texts:0, comments:0}

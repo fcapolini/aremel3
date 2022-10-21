@@ -1,6 +1,6 @@
 import { assert } from "chai";
-import { HtmlDocument, HtmlElement } from "../../src/server/htmldom";
-import HtmlParser from "../../src/server/htmlparser";
+import { HtmlDocument, HtmlElement } from "../../src/compiler/htmldom";
+import HtmlParser from "../../src/compiler/htmlparser";
 import { DomDocument } from "../../src/shared/dom";
 import * as rt from "../../src/shared/runtime";
 import { normalizeText } from "../../src/shared/util";

@@ -1,10 +1,10 @@
 import { assert } from "chai";
 import { generate } from "escodegen";
 import fs from "fs";
-import { compileApp } from "../../src/server/compiler";
-import { HtmlDocument } from "../../src/server/htmldom";
-import { load } from "../../src/server/loader";
-import Preprocessor from "../../src/server/preprocessor";
+import { compileApp } from "../../src/compiler/compiler";
+import { HtmlDocument } from "../../src/compiler/htmldom";
+import { load } from "../../src/compiler/loader";
+import Preprocessor from "../../src/compiler/preprocessor";
 import * as rt from "../../src/shared/runtime";
 import { normalizeSpace } from "../../src/shared/util";
 

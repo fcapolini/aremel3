@@ -1,10 +1,10 @@
-import { HtmlAttribute, HtmlDocument, HtmlElement } from "../../src/server/htmldom";
+import { HtmlAttribute, HtmlDocument, HtmlElement } from "../../src/compiler/htmldom";
 import { ELEMENT_NODE, TEXT_NODE } from "../../src/shared/dom";
-import Preprocessor, { domGetTop, PreprocessorError } from "../../src/server/preprocessor";
+import Preprocessor, { domGetTop, PreprocessorError } from "../../src/compiler/preprocessor";
 import { EReg, normalizeText } from "../../src/shared/util";
 import { assert } from "chai";
 
-const preprocessor = new Preprocessor(process.cwd() + '/test/server/preprocessor');
+const preprocessor = new Preprocessor(process.cwd() + '/test/compiler/preprocessor');
 
 describe("preprocessor", () => {
 
