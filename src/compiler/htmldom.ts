@@ -565,7 +565,7 @@ export class HtmlAttribute {
   output(sb: StringBuf, sort: boolean, plain: boolean) {
     sb.add(' '); sb.add(this.name);
     var outputValue = this.getOutputValue(sort, plain);
-    if (outputValue !== '' || this.quote) {
+    if (outputValue !== ''/* || this.quote*/) {
       if (plain) {
         var q = this.quote ? this.quote : '"';
         sb.add('='); sb.add(q === '[' ? '[[' : q);

@@ -43,6 +43,7 @@ describe('delivery', () => {
       assert.equal(app.scopes.size, count);
       assert.equal(
         normalizeSpace(jsdom.serialize()
+          .replace(' async="" ', ' async ')
           .replace('><html', '>\n<html')
           .replace('><head', '>\n<head')
           .replace('></html>', '>\n</html>'))?.trim(),
@@ -56,6 +57,7 @@ describe('delivery', () => {
       );
       assert.equal(
         normalizeSpace(jsdom.serialize()
+          .replace(' async="" ', ' async ')
           .replace('><html', '>\n<html')
           .replace('><head', '>\n<head')
           .replace('></html>', '>\n</html>'))?.trim(),

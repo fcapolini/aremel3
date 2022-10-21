@@ -97,7 +97,7 @@ describe("loader", () => {
     assert.equal(body?.props.get(`${r.TEXT_ID_PREFIX}0`)?.val, '[[v]]');
     assert.equal(
       normalizeText(app.doc?.toString(true)),
-      normalizeText(`<html class="all" data-aremel="0" lang="">
+      normalizeText(`<html class="all" data-aremel="0" lang>
         <head data-aremel="1"></head>
         <body data-aremel="2"><!--${r.TEXT_COMMENT1}0--><!--${r.TEXT_COMMENT2}0--></body>
       </html>
@@ -118,7 +118,7 @@ describe("loader", () => {
     assert.equal(body?.props.get(`${r.TEXT_ID_PREFIX}0`)?.val, '[[v]]');
     assert.equal(
       normalizeText(app.doc?.toString(true)),
-      normalizeText(`<html class="all" data-aremel="0" lang="">
+      normalizeText(`<html class="all" data-aremel="0" lang>
         <head data-aremel="1"></head>
         <body data-aremel="2">value: <!--${r.TEXT_COMMENT1}0--><!--${r.TEXT_COMMENT2}0-->...</body>
       </html>
