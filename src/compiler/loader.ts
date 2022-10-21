@@ -29,19 +29,20 @@ export async function load(fname: string, pre: Preprocessor): Promise<lang.App> 
     }
   
   } catch (ex: any) {
-    if (ex.msg && ex.fname) {
-      ret.errors.push({
-        type: 'err',
-        msg: ex.msg,
-        pos: {
-          fname: ex.fname,
-          line1: ex.row,
-          line2: ex.row,
-          column1: ex.col,
-          column2: ex.col,
-        }
-      });
+    const error: lang.Error = {
+      type: 'err',
+      msg: ex.msg ? ex.msg : `unknown error: ${ex}`
     }
+    if (ex.fname) {
+      error.pos = {
+        fname: ex.fname,
+        line1: ex.row,
+        line2: ex.row,
+        column1: ex.col,
+        column2: ex.col,
+      }
+    }
+    ret.errors.push(error);
   }
 
   return ret;
@@ -87,7 +88,8 @@ function loadNodeProps(
       }
       dom.removeAttribute(lang.AKA_ATTR);
     } else {
-      node.aka = lang.defaultAka(dom);
+      const aka = lang.defaultAka(dom);
+      aka && (node.aka = aka);
     }
 
     loadNodeAttributes(node, dom, pre);

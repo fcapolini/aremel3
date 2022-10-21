@@ -17,6 +17,7 @@ export default class Delivery {
   async fromSource(fname: string, sort = false): Promise<string> {
     const pre = new Preprocessor(this.rootpath);
     const app = await load(fname, pre);
+    //FIXME: check app.errors
     return new Promise<string>((resolve, reject) => {
       try {
         const doc = app.doc as DomDocument;

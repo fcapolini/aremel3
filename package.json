@@ -17,6 +17,7 @@
     "@types/escodegen": "^0.0.7",
     "@types/esprima": "^4.0.3",
     "@types/estraverse": "^5.1.1",
+    "@types/express": "^4.17.14",
     "@types/jsdom": "^20.0.0",
     "@types/mocha": "^9.1.1",
     "chai": "^4.3.6",
@@ -30,6 +31,8 @@
   "dependencies": {
     "escodegen": "^2.0.0",
     "esprima": "^4.0.1",
-    "estraverse": "^5.3.0"
+    "estraverse": "^5.3.0",
+    "express": "^4.18.2",
+    "express-rate-limit": "^6.6.0"
   }
 }
