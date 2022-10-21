@@ -323,7 +323,7 @@ export class HtmlElement extends HtmlNode implements DomElement {
       this.pos.i1, this.pos.i2, this.pos.origin
     );
     this.attributes.forEach((v, k) => {
-      ret.setAttribute(k, v._value);
+      ret.setAttribute(k, v.value);
     });
     ret.selfclose = this.selfclose;
     if (deep) {
@@ -546,7 +546,7 @@ export class HtmlComment extends HtmlNode implements DomComment {
 //TODO: value accessors aren't needed anymore
 export class HtmlAttribute {
   name: string;
-  _value: string;
+  value: string;
   quote?: string;
   pos1?: HtmlPos;
   pos2?: HtmlPos;
@@ -556,19 +556,11 @@ export class HtmlAttribute {
     i1?: number, i2?: number, origin?: number
   ) {
     this.name = name;
-    this._value = value;
+    this.value = value;
     this.quote = quote;
     if (origin && i1 && i2) {
       this.pos1 = {origin:origin, i1:i1, i2:i2};
     }
-  }
-
-  set value(v: string) {
-    this._value = v;
-  }
-
-  get value(): string {
-    return this._value;
   }
 
   output(sb: StringBuf, sort: boolean, plain: boolean) {
@@ -645,7 +637,6 @@ class HtmlStyleAttribute extends HtmlAttribute {
     i1?: number, i2?: number, origin?: number
   ) {
     super(name, value, quote, i1, i2, origin);
-    this._value = '';
     this.value = value;
   }
 
