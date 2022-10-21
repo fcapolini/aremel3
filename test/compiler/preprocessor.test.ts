@@ -1,8 +1,8 @@
-import { HtmlAttribute, HtmlDocument, HtmlElement } from "../../src/compiler/htmldom";
-import { ELEMENT_NODE, TEXT_NODE } from "../../src/shared/dom";
-import Preprocessor, { domGetTop, PreprocessorError } from "../../src/compiler/preprocessor";
-import { EReg, normalizeText } from "../../src/shared/util";
 import { assert } from "chai";
+import { HtmlAttribute, HtmlDocument, HtmlElement } from "../../src/compiler/htmldom";
+import Preprocessor, { domGetTop } from "../../src/compiler/preprocessor";
+import { ELEMENT_NODE, TEXT_NODE } from "../../src/shared/dom";
+import { normalizeText } from "../../src/shared/util";
 
 const preprocessor = new Preprocessor(process.cwd() + '/test/compiler/preprocessor');
 

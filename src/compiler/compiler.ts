@@ -6,10 +6,6 @@ import * as expr from "./expr";
 import * as lang from "./lang";
 import * as pre from "./preprocessor";
 
-interface Context {
-  nextId: number
-}
-
 /**
  * @see rt.AppState
  */

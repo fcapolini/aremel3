@@ -1,4 +1,4 @@
-import { COMMENT_NODE, DomComment, DomDocument, DomElement, DomNode, DomNodeList, DomTextNode, ELEMENT_NODE, TEXT_NODE } from "../shared/dom";
+import * as dom from "../shared/dom";
 import { StringBuf } from "../shared/util";
 import HtmlParser from "./htmlparser";
 
@@ -8,9 +8,9 @@ export interface HtmlPos {
   i2: number,
 }
 
-export class HtmlNode implements DomNode {
-  ownerDocument: DomDocument | undefined;
-  parentElement: DomElement | undefined;
+export class HtmlNode implements dom.DomNode {
+  ownerDocument: dom.DomDocument | undefined;
+  parentElement: dom.DomElement | undefined;
   nodeType: number;
   pos: HtmlPos;
 
@@ -24,7 +24,7 @@ export class HtmlNode implements DomNode {
     this.pos = { origin: origin, i1: i1, i2: i2 };
   }
 
-  get nextSibling(): DomNode | null {
+  get nextSibling(): dom.DomNode | null {
     let ret = null;
     if (this.parentElement) {
       const siblings = (this.parentElement as HtmlElement).children;
@@ -47,7 +47,7 @@ export class HtmlNode implements DomNode {
     return this;
   }
 
-  cloneNode(deep: boolean): DomNode {
+  cloneNode(deep: boolean): dom.DomNode {
     return new HtmlNode(
       this.ownerDocument as HtmlDocument | undefined,
       undefined,
@@ -75,7 +75,7 @@ export const VOID_ELEMENTS = new Set([
   'COMMAND', 'KEYGEN', 'MENUITEM'
 ]);
 
-export class HtmlElement extends HtmlNode implements DomElement {
+export class HtmlElement extends HtmlNode implements dom.DomElement {
   tagName: string;
   attributes: Map<string, HtmlAttribute>;
   children: Array<HtmlNode>;
@@ -88,7 +88,7 @@ export class HtmlElement extends HtmlNode implements DomElement {
     doc: HtmlDocument | undefined, parent: HtmlElement | undefined,
     name: string, i1: number, i2: number, origin: number
   ) {
-    super(doc, parent, ELEMENT_NODE, i1, i2, origin);
+    super(doc, parent, dom.ELEMENT_NODE, i1, i2, origin);
     this.tagName = name.toUpperCase();
     this.attributes = new Map();
     this.children = [];
@@ -122,15 +122,15 @@ export class HtmlElement extends HtmlNode implements DomElement {
     }
   }
 
-  appendChild(n: DomNode) {
+  appendChild(n: dom.DomNode) {
     this.addChild(n);
   }
 
-  insertBefore(n: DomNode, ref: DomNode | null) {
+  insertBefore(n: dom.DomNode, ref: dom.DomNode | null) {
     this.addChild(n, ref ?? undefined);
   }
 
-  removeChild(n: DomNode) {
+  removeChild(n: dom.DomNode) {
     (n as HtmlNode).remove();
   }
 
@@ -138,14 +138,14 @@ export class HtmlElement extends HtmlNode implements DomElement {
     return this.children.length > 0 ? this.children[0] : undefined;
   }
 
-  get firstElementChild(): DomElement | undefined {
+  get firstElementChild(): dom.DomElement | undefined {
     return this.getFirstElementChild();
   }
 
   get childElementCount(): number {
     let ret = 0;
     for (let n of this.children) {
-      if (n.nodeType === ELEMENT_NODE) {
+      if (n.nodeType === dom.ELEMENT_NODE) {
         ret++;
       }
     }
@@ -157,7 +157,7 @@ export class HtmlElement extends HtmlNode implements DomElement {
       var i = (this.parentElement as HtmlElement).children.indexOf(this);
       while (--i >= 0) {
         var sibling = (this.parentElement as HtmlElement).children[i];
-        if (sibling.nodeType === ELEMENT_NODE) {
+        if (sibling.nodeType === dom.ELEMENT_NODE) {
           return sibling as HtmlElement;
         }
       }
@@ -171,7 +171,7 @@ export class HtmlElement extends HtmlNode implements DomElement {
       var i = parent.children.indexOf(this);
       while (++i < parent.children.length) {
         var sibling = parent.children[i];
-        if (sibling.nodeType === ELEMENT_NODE) {
+        if (sibling.nodeType === dom.ELEMENT_NODE) {
           return sibling as HtmlElement;
         }
       }
@@ -179,7 +179,7 @@ export class HtmlElement extends HtmlNode implements DomElement {
     return undefined;
   }
 
-  addChild(child: DomNode, before?: DomNode) {
+  addChild(child: dom.DomNode, before?: dom.DomNode) {
     //TODO: as per specs we should make sure `child` gets unlinked
     // https://developer.mozilla.org/en-US/docs/Web/API/Node/appendChild
     // but this currently breaks preprocessor's tests:
@@ -250,22 +250,22 @@ export class HtmlElement extends HtmlNode implements DomElement {
     return VOID_ELEMENTS.has(this.tagName);
   }
 
-  getFirstElementChild(): DomElement | undefined {
+  getFirstElementChild(): dom.DomElement | undefined {
     for (var i in this.children) {
       var n = this.children[i];
-      if (n.nodeType === ELEMENT_NODE) {
-        return n as unknown as DomElement;
+      if (n.nodeType === dom.ELEMENT_NODE) {
+        return n as unknown as dom.DomElement;
       }
     }
     return undefined;
   }
 
-  get childNodes(): DomNodeList {
+  get childNodes(): dom.DomNodeList {
     return {
       length: this.children.length,
       item: (i) => {
         if (i >= 0 && i < this.children.length) {
-          return (this.children[i] as DomNode);
+          return (this.children[i] as dom.DomNode);
         } else {
           return undefined;
         }
@@ -273,7 +273,7 @@ export class HtmlElement extends HtmlNode implements DomElement {
       forEach: (cb) => {
         var i = 0;
         for (var child of this.children.slice()) {
-          cb(child as DomNode, i++);
+          cb(child as dom.DomNode, i++);
         }
       },
     }
@@ -299,7 +299,7 @@ export class HtmlElement extends HtmlNode implements DomElement {
   }
 
   set innerText(s: string) {
-    if (this.children.length == 1 && this.children[0].nodeType == TEXT_NODE) {
+    if (this.children.length == 1 && this.children[0].nodeType == dom.TEXT_NODE) {
       (this.children[0] as HtmlText).nodeValue = s;
     } else {
       while (this.children.length > 0) {
@@ -315,7 +315,7 @@ export class HtmlElement extends HtmlNode implements DomElement {
     return sb.toString();
   }
 
-  cloneNode(deep: boolean): DomNode {
+  cloneNode(deep: boolean): dom.DomNode {
     const ret = new HtmlElement(
       this.ownerDocument as HtmlDocument | undefined,
       undefined,
@@ -370,7 +370,7 @@ export class HtmlElement extends HtmlNode implements DomElement {
 
   scan(cb: (n: HtmlElement) => boolean, recursive: boolean): HtmlElement | undefined {
     for (const n of this.children) {
-      if (n.nodeType === ELEMENT_NODE) {
+      if (n.nodeType === dom.ELEMENT_NODE) {
         if (cb(n as HtmlElement)) {
           return n as HtmlElement;
         }
@@ -404,7 +404,7 @@ export class HtmlElement extends HtmlNode implements DomElement {
 
 }
 
-export class HtmlDocument extends HtmlElement implements DomDocument {
+export class HtmlDocument extends HtmlElement implements dom.DomDocument {
 
   constructor(origin: number) {
     super(undefined, undefined, "#document", 0, 0, origin);
@@ -412,31 +412,31 @@ export class HtmlDocument extends HtmlElement implements DomDocument {
     this.selfclose = true;
   }
 
-  get head(): DomElement | undefined {
+  get head(): dom.DomElement | undefined {
     return (this.firstElementChild as HtmlElement | undefined)?.scan(
       e => e.tagName === 'HEAD',
       false
     );
   }
 
-  get body(): DomElement | undefined {
+  get body(): dom.DomElement | undefined {
     return (this.firstElementChild as HtmlElement | undefined)?.scan(
       e => e.tagName === 'BODY',
       false
     );
   }
 
-  createElement(tagName: string): DomElement {
+  createElement(tagName: string): dom.DomElement {
     var ret = new HtmlElement(this, undefined, tagName, 0, 0, 0);
     return ret;
   }
 
-  createComment(text: string): DomComment {
+  createComment(text: string): dom.DomComment {
     var ret = new HtmlComment(this, undefined, text, 0, 0, 0);
     return ret;
   }
 
-  createTextNode(text: string): DomTextNode {
+  createTextNode(text: string): dom.DomTextNode {
     var ret = new HtmlText(this, undefined, text, 0, 0, 0, false);
     return ret;
   }
@@ -449,7 +449,7 @@ export class HtmlDocument extends HtmlElement implements DomDocument {
   }
 }
 
-export class HtmlText extends HtmlNode implements DomTextNode {
+export class HtmlText extends HtmlNode implements dom.DomTextNode {
   escape: boolean;
   nodeValue: string;
 
@@ -457,12 +457,12 @@ export class HtmlText extends HtmlNode implements DomTextNode {
     doc: HtmlDocument | undefined, parent: HtmlElement | undefined,
     text: string, i1: number, i2: number, origin: number, escape = true
   ) {
-    super(doc, parent, TEXT_NODE, i1, i2, origin);
+    super(doc, parent, dom.TEXT_NODE, i1, i2, origin);
     this.escape = escape;
     this.nodeValue = (escape ? htmlUnescape(text) : text);
   }
 
-  cloneNode(deep: boolean): DomNode {
+  cloneNode(deep: boolean): dom.DomNode {
     const ret = new HtmlText(
       this.ownerDocument as HtmlDocument | undefined,
       undefined,
@@ -509,18 +509,18 @@ function htmlUnescape(str: string): string {
     .replace(/&amp;/g, '&');
 }
 
-export class HtmlComment extends HtmlNode implements DomComment {
+export class HtmlComment extends HtmlNode implements dom.DomComment {
   nodeValue: string;
 
   constructor(
     doc: HtmlDocument | undefined, parent: HtmlElement | undefined,
     text: string, i1: number, i2: number, origin: number
   ) {
-    super(doc, parent, COMMENT_NODE, i1, i2, origin);
+    super(doc, parent, dom.COMMENT_NODE, i1, i2, origin);
     this.nodeValue = text;
   }
 
-  cloneNode(deep: boolean): DomNode {
+  cloneNode(deep: boolean): dom.DomNode {
     return new HtmlComment(
       this.ownerDocument as HtmlDocument | undefined,
       undefined,
@@ -543,7 +543,6 @@ export class HtmlComment extends HtmlNode implements DomComment {
 // HtmlAttribute
 // =============================================================================
 
-//TODO: value accessors aren't needed anymore
 export class HtmlAttribute {
   name: string;
   value: string;

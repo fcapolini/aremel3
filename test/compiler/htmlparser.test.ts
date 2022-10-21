@@ -1,8 +1,8 @@
-import fs from "fs";
 import { assert } from "chai";
+import fs from "fs";
 import { HtmlDocument, HtmlElement } from '../../src/compiler/htmldom';
+import HtmlParser from "../../src/compiler/htmlparser";
 import { COMMENT_NODE, ELEMENT_NODE, TEXT_NODE } from "../../src/shared/dom";
-import HtmlParser, { HtmlException } from "../../src/compiler/htmlparser";
 
 const rootPath = process.cwd() + '/test/compiler/htmlparser';
 

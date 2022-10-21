@@ -1,6 +1,6 @@
 import { assert } from "chai";
-import * as rt from "../../src/shared/runtime";
 import { prepareExpr } from "../../src/compiler/expr";
+import * as rt from "../../src/shared/runtime";
 
 describe("expr", () => {
 

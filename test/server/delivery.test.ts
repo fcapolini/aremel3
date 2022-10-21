@@ -1,12 +1,12 @@
 import { assert } from "chai";
 import fs from "fs";
 import { JSDOM } from "jsdom";
-import Delivery from "../../src/compiler/delivery";
+import Delivery from "../../src/server/delivery";
 import { DomDocument } from "../../src/shared/dom";
 import * as rt from "../../src/shared/runtime";
-import { normalizeSpace, normalizeText } from "../../src/shared/util";
+import { normalizeSpace } from "../../src/shared/util";
 
-const ROOTPATH = process.cwd() + '/test/compiler/delivery';
+const ROOTPATH = process.cwd() + '/test/server/delivery';
 const SOURCE_SUFFIX = '.source.html';
 const CACHED_SUFFIX = '.cached.html';
 const CHANGE_SUFFIX = '.change.html';
@@ -29,8 +29,8 @@ describe('delivery', () => {
         { encoding: 'utf8' }
       );
       assert.equal(
-        normalizeSpace(outputPage).trim(),
-        normalizeSpace(cachedPage).trim()
+        normalizeSpace(outputPage)?.trim(),
+        normalizeSpace(cachedPage)?.trim()
       );
       // client page
       const jsdom = new JSDOM(outputPage, { runScripts: "dangerously" });
@@ -45,8 +45,8 @@ describe('delivery', () => {
         normalizeSpace(jsdom.serialize()
           .replace('><html', '>\n<html')
           .replace('><head', '>\n<head')
-          .replace('></html>', '>\n</html>')).trim(),
-        normalizeSpace(cachedPage).trim()
+          .replace('></html>', '>\n</html>'))?.trim(),
+        normalizeSpace(cachedPage)?.trim()
       );
       // page change
       app.root.obj.change = 1;
@@ -58,8 +58,8 @@ describe('delivery', () => {
         normalizeSpace(jsdom.serialize()
           .replace('><html', '>\n<html')
           .replace('><head', '>\n<head')
-          .replace('></html>', '>\n</html>')).trim(),
-        normalizeSpace(changePage).trim()
+          .replace('></html>', '>\n</html>'))?.trim(),
+        normalizeSpace(changePage)?.trim()
       );
     });
   });

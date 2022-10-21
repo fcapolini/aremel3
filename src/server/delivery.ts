@@ -1,10 +1,10 @@
 import { generate } from "escodegen";
-import { compileApp } from "./compiler";
-import { load } from "./loader";
+import { compileApp } from "../compiler/compiler";
+import { load } from "../compiler/loader";
 import * as rt from "../shared/runtime";
 import { DomDocument } from "../shared/dom";
-import { HtmlDocument } from "./htmldom";
-import Preprocessor from "./preprocessor";
+import { HtmlDocument } from "../compiler/htmldom";
+import Preprocessor from "../compiler/preprocessor";
 
 export default class Delivery {
   rootpath: string;

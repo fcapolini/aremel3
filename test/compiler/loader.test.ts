@@ -1,10 +1,8 @@
 import { assert } from "chai";
-import { HtmlDocument } from "../../src/compiler/htmldom";
-import { load } from "../../src/compiler/loader";
 import * as l from "../../src/compiler/lang";
-import * as r from "../../src/shared/runtime";
+import { load } from "../../src/compiler/loader";
 import Preprocessor from "../../src/compiler/preprocessor";
-import { DomDocument } from "../../src/shared/dom";
+import * as r from "../../src/shared/runtime";
 import { normalizeText } from "../../src/shared/util";
 
 const preprocessor = new Preprocessor(process.cwd() + '/test/compiler/loader');
