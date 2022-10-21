@@ -8,7 +8,7 @@ import Preprocessor from "../../src/compiler/preprocessor";
 import * as rt from "../../src/shared/runtime";
 import { normalizeSpace } from "../../src/shared/util";
 
-const ROOTPATH = process.cwd() + '/test/app/pages';
+const ROOTPATH = process.cwd() + '/test/compiler/pages';
 const SUFFIX = '.in.html';
 const SUFFIX2 = '.out.html';
 const pages = fs.readdirSync(ROOTPATH)
