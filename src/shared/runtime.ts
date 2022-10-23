@@ -1,4 +1,4 @@
-import { COMMENT_NODE, DomDocument, DomElement, DomTextNode, ELEMENT_NODE, TEXT_NODE } from "./dom";
+import * as dom from "./dom";
 
 export const RESERVED_PREFIX = '__';
 export const ID_ATTR = 'data-aremel';
@@ -66,14 +66,14 @@ export interface ValuePos {
 // =============================================================================
 
 export class App {
-	doc: DomDocument;
+	doc: dom.DomDocument;
 	state: AppState;
   domMap: DomMap;
   scopes: Map<string, Scope>;
   root: Scope;
   pushLevel?: number;
 
-  constructor(doc: DomDocument, state: AppState) {
+  constructor(doc: dom.DomDocument, state: AppState) {
     this.doc = doc;
     this.state = state;
     this.domMap = new DomMap(doc.firstElementChild);
@@ -99,16 +99,16 @@ export class App {
 
 class DomMap {
   parent?: DomMap;
-  map: Map<string, DomElement>;
+  map: Map<string, dom.DomElement>;
 
-  constructor(root?: DomElement, parent?: DomMap) {
+  constructor(root?: dom.DomElement, parent?: DomMap) {
     this.parent = parent;
     const map = this.map = new Map();
 
-    function f(e: DomElement) {
+    function f(e: dom.DomElement) {
       const id = e.getAttribute(ID_ATTR);
       id && map.set(id, e);
-      e.childNodes.forEach(n => n.nodeType === ELEMENT_NODE && f(n as DomElement));
+      e.childNodes.forEach(n => n.nodeType === dom.ELEMENT_NODE && f(n as dom.DomElement));
     }
     root && f(root);
   }
@@ -117,7 +117,7 @@ class DomMap {
     return this.map.size;
   }
 
-  get(id: string): DomElement | undefined {
+  get(id: string): dom.DomElement | undefined {
     let ret;
     for (let that = this as DomMap | undefined; that && !ret; that = that.parent) {
       ret = that.map.get(id);
@@ -136,9 +136,9 @@ export class Scope {
 	parent?: Scope
 	children: Scope[]
 	obj: any
-  dom?: DomElement
+  dom?: dom.DomElement
   domMap: DomMap
-  textMap?: Map<string, DomTextNode>
+  textMap?: Map<string, dom.DomTextNode>
 
   constructor(
     app: App, domMap: DomMap, state: ScopeState, parent?: Scope, before?: Scope
@@ -181,18 +181,18 @@ export class Scope {
 
   getTextMap() {
     const that = this;
-    const ret = new Map<string, DomTextNode>();
-    function f(e: DomElement) {
+    const ret = new Map<string, dom.DomTextNode>();
+    function f(e: dom.DomElement) {
       e.childNodes.forEach(n => {
-        if (n.nodeType === COMMENT_NODE) {
-          const s = (n as DomTextNode).nodeValue;
+        if (n.nodeType === dom.COMMENT_NODE) {
+          const s = (n as dom.DomTextNode).nodeValue;
           if (s.startsWith(TEXT_COMMENT1)) {
             const id = s.substring(TEXT_COMMENT1_LEN);
             const t = n.nextSibling;
-            if (t?.nodeType === TEXT_NODE) {
-              ret.set(id, t as DomTextNode);
-            } else if (t?.nodeType === COMMENT_NODE) {
-              const s = (t as DomTextNode).nodeValue;
+            if (t?.nodeType === dom.TEXT_NODE) {
+              ret.set(id, t as dom.DomTextNode);
+            } else if (t?.nodeType === dom.COMMENT_NODE) {
+              const s = (t as dom.DomTextNode).nodeValue;
               if (s.startsWith(TEXT_COMMENT2)) {
                 const n = that.app.doc.createTextNode('');
                 e.insertBefore(n, t);
@@ -200,9 +200,9 @@ export class Scope {
               }
             }
           }
-        } else if (n.nodeType === ELEMENT_NODE) {
-          if (!(n as DomElement).getAttribute(ID_ATTR)) {
-            f(n as DomElement);
+        } else if (n.nodeType === dom.ELEMENT_NODE) {
+          if (!(n as dom.DomElement).getAttribute(ID_ATTR)) {
+            f(n as dom.DomElement);
           }
         }
       });
@@ -309,15 +309,15 @@ export class Scope {
     const re = new RegExp(`^${this.state.id.replace('.', '\\.')}\\.\\d+$`);
     if (this.dom && this.dom.parentElement) {
       this.dom.parentElement.childNodes.forEach(n => {
-        if (n.nodeType === ELEMENT_NODE) {
-          const id = (n as DomElement).getAttribute(ID_ATTR);
+        if (n.nodeType === dom.ELEMENT_NODE) {
+          const id = (n as dom.DomElement).getAttribute(ID_ATTR);
           if (id !== undefined && re.test(id)) {
             const i = parseInt(id.substring(`${this.state.id}.`.length));
             const state = this.cloneState(this.state, i, true);
             delete state.values[DATA_VALUE].fn;
             delete state.values[DATA_VALUE].t;
             state.values[DATA_VALUE].v = undefined;
-            const dom = n as DomElement;
+            const dom = n as dom.DomElement;
             const clone = this.cloneScope(dom, state);
             clone.relinkValues();
             ret.push(clone);
@@ -329,13 +329,13 @@ export class Scope {
   }
 
   private cloneDom(id: string) {
-    const dom = this.dom?.cloneNode(true) as DomElement | undefined;
+    const dom = this.dom?.cloneNode(true) as dom.DomElement | undefined;
     dom && dom.setAttribute(ID_ATTR, id);
     dom && this.dom?.parentElement?.insertBefore(dom, this.dom);
     return dom;
   }
 
-  private cloneScope(dom: DomElement | undefined, state: ScopeState) {
+  private cloneScope(dom: dom.DomElement | undefined, state: ScopeState) {
     const domMap = new DomMap(dom, this.domMap);
     const ret = new Scope(this.app, domMap, state, this.parent, this);
     return ret;

@@ -1,4 +1,3 @@
-import e from 'express';
 import express, { Application } from 'express';
 import rateLimit from 'express-rate-limit';
 import fs from "fs";

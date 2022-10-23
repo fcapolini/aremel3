@@ -14,7 +14,7 @@ describe('server', () => {
     port = await server.startServer({ mute: true });
   });
 
-  after(async () => {
+  after(() => {
     server.stopServer();
   });
 

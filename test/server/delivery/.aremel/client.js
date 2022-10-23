@@ -1,1 +1,1 @@
-../../../../dist/.aremel/client.js
+../../../../build/client/client.js
