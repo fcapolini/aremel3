@@ -3,6 +3,7 @@ import { COMMENT_NODE, DomDocument, DomElement, DomTextNode, ELEMENT_NODE, TEXT_
 export const RESERVED_PREFIX = '__';
 export const ID_ATTR = 'data-aremel';
 export const STATE_GLOBAL = '__aremel_state__';
+export const APP_GLOBAL = '__aremel_app__';
 
 export const TEXT_ID_PREFIX = '__t$';
 export const TEXT_COMMENT1 = '-:';
