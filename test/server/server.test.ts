@@ -1,21 +1,35 @@
 import { assert } from "chai";
 import { JSDOM } from "jsdom";
+import { exec, execSync, ChildProcess } from "child_process";
 import Server from "../../src/server/server";
 import * as rt from "../../src/shared/runtime";
 
 const ROOTPATH = process.cwd() + '/test/server/delivery';
 
-describe('server', () => {
-  let server: Server;
-  let port: number;
+describe('server', function () {
+  this.timeout(10000);
+  let serverProcess: ChildProcess;
+  let port: string;
 
   before(async () => {
-    server = new Server(ROOTPATH);
-    port = await server.startServer({ mute: true });
+    // compile client runtime code
+    execSync('npx spack');
+    // launch server from ts sources
+    serverProcess = exec(`npx ts-node src/server.ts -m ${ROOTPATH}`);
+    port = await new Promise<string>((resolve, reject) => {
+      serverProcess.once('error', (code, signal) => reject(new Error(`${code} ${signal}`)));
+      serverProcess.stderr?.on('data', (s) => reject(new Error(s)));
+      serverProcess.stdout?.on('data', (s) => {
+        const parts = s.split(':');
+        if (parts.length === 2 && parts[0] === 'listening on port') {
+          resolve(parts[1].trim());
+        }
+      });
+    });
   });
 
   after(() => {
-    server.stopServer();
+    serverProcess.kill();
   });
 
   it('should deliver base.source.html', async () => {

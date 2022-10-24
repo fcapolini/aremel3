@@ -5,7 +5,7 @@ import Server, { ServerProps } from "./server/server";
 
 program
   .argument('<docroot>', 'document root path name')
-  .option('-p, --port', 'port number', '3000')
+  .option('-p, --port', 'port number')
   .option('-s, --assumeHTTPS', 'assume HTTPS')
   .option('-x, --trustProxy', 'trust proxy')
   .option('-m, --muteLogging', 'mute logging')
@@ -22,6 +22,6 @@ program
     options.trustProxy && (props.trustProxy = true);
     options.muteLogging && (props.mute = true);
     const port = await new Server(docroot).startServer(props);
-    console.log('http://localhost:' + port + '/');
+    console.log('listening on port: ' + port);
   })
   .parse();
