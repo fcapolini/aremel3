@@ -21,7 +21,7 @@ program
     options.assumeHTTPS && (props.assumeHttps = true);
     options.trustProxy && (props.trustProxy = true);
     options.muteLogging && (props.mute = true);
-    const port = await new Server(docroot).startServer(props);
+    const port = await new Server(docroot).start(props);
     console.log('listening on port: ' + port);
   })
   .parse();

@@ -34,7 +34,7 @@ export default class Server {
     this.delivery = new Delivery(rootpath);
   }
 
-  async startServer(
+  async start(
     props?: ServerProps,
     init?: (app: Application, props?: ServerProps) => void
   ): Promise<number> {
@@ -110,13 +110,10 @@ export default class Server {
     });
   }
 
-  stopServer(cb?: (err: any) => void) {
-    try {
-      (this.server as http.Server).close(cb);
-    } catch (ex:any) {
-      cb ? cb(ex) : null;
-    }
-    this.server = undefined;
+  async stop() {
+    return new Promise<void>((resolve, reject) => {
+      this.server ? this.server.close(err => err ? reject(err) : resolve()) : resolve();
+    });
   }
 
 	log(type: Logtype, msg: string) {
