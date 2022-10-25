@@ -29,7 +29,7 @@ describe('server', function () {
   });
 
   after(() => {
-    serverProcess.kill();
+    serverProcess.kill('SIGKILL');
   });
 
   it('should deliver base.source.html', async () => {
