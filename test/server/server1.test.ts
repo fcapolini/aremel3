@@ -5,7 +5,7 @@ import Server from "../../src/server/server";
 import * as rt from "../../src/shared/runtime";
 import { normalizeSpace } from "../../src/shared/util";
 
-const ROOTPATH = process.cwd() + '/test/server/pages';
+const ROOTPATH = process.cwd() + '/test/server/server1';
 const SOURCE_SUFFIX = '.source.html';
 const CACHED_SUFFIX = '.cached.html';
 const CHANGE_SUFFIX = '.change.html';
@@ -14,7 +14,7 @@ const sources = fs.readdirSync(ROOTPATH)
   .map(v => v.substring(0, v.length - SOURCE_SUFFIX.length))
   .sort();
 
-describe('server', function () {
+describe('server1', function () {
   let server: Server;
   let portNr: number;
 
@@ -64,8 +64,8 @@ describe('server', function () {
 
 function serialize(jsdom: JSDOM): string {
   return jsdom.serialize()
-  .replace(' async="" ', ' async ')
-  .replace('><html', '>\n<html')
-  .replace('><head', '>\n<head')
-  .replace('></html>', '>\n</html>');
+    .replace(' async="" ', ' async ')
+    .replace('><html', '>\n<html')
+    .replace('><head', '>\n<head')
+    .replace('></html>', '>\n</html>');
 }
